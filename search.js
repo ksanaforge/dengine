@@ -13,12 +13,12 @@ let parseTofind=(tofind)=>{
 		if (!t.length)continue;
 		newobj.raw=t;
 
-		let renderexp;
+		let renderexp,rt=t.replace("$","");
 		if (t.charAt(0)=='?') {
-			t=t.substr(1);
-			renderexp=fuzzilize(t);
+			rt=t=t.substr(1);
+			renderexp=fuzzilize(rt);
 		} else {
-			renderexp=fuzzilize(t,"[^"+TOKEN_CHARS+"]"); //每一筆前面要補空白，否則塗不到
+			renderexp=fuzzilize(rt,"[^"+TOKEN_CHARS+"]"); //每一筆前面要補空白，否則塗不到
 			t="^"+t;
 		}
 

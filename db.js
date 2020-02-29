@@ -318,6 +318,9 @@ const Db=function(_d){
 	let buildbookhierarchy=()=>{
 		for (var i=0;i<booknames.length;i++){
 			let m=booknames[i].match(BOOKNAME_REGEXP);
+			if (!m){
+				debugger
+			}
 			let serialname=m[1];
 			let subbook=m[2];
 			let subsubbook=null;

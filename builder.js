@@ -166,7 +166,7 @@ const build=(meta,raw)=>{
 	if (txtdeflated) dbobj.txtdeflated=true;
 	dbobj.txtstarts=txtstarts;
 	dbobj.idxstarts=idxstarts;
-	dbobj.txtlengths=txtlengths; // for calculating average line of txt line
+	dbobj.txtlengths=txtlengths; // for calculating average line of txt
 	dbobj.blurb=blurb;
 
 
