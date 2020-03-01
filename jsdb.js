@@ -92,9 +92,12 @@ const openSearchable=(name,field,cb)=>{
 const findtokens=(dbname,patterns,cb)=>{
 	log("findtokens");
 	openSearchable(dbname, db=>{
-		let pat="";
+		let pat ,len=0;
 		for (var term in patterns){
-			pat=patterns[term];
+			if (term.length>len) {
+				pat=patterns[term];
+				len=term.length;
+			}
 		}
 		log("guesslanguage");
 		const lang=db.guesslanguage(pat);
@@ -211,10 +214,22 @@ var search=(dbname,field,tokens,opts,cb)=>{
 	}
 	tokens=JSON.parse(JSON.stringify(tokens));
 	const maxtermtoken=opts.maxtermtoken||5;
-	let toload=[];
+	let toload=[],stopwords={};
 	for (var key in tokens){
 		tokens[key].splice(maxtermtoken);
-		toload=toload.concat(tokens[key]);
+
+		for (var j=0;j<tokens[key].length;j++){
+			let tk=tokens[key][j];
+			if (tk[1]<0) {
+				const db=dbpool[dbname]; //unknown seq of token, sentence search
+				tk[1]=db.tokenseq(tk[0],field);
+			}
+			if (tk[1]<0)stopwords[key]=true;;
+		}
+		tokens[key]=tokens[key].filter( item=>item[1]>=0 );
+		if (tokens[key].length>0){
+			toload=toload.concat(tokens[key]);
+		}
 	}
 	
 	fetchpostings(dbname,field,toload,(postings,db)=>{
@@ -222,6 +237,7 @@ var search=(dbname,field,tokens,opts,cb)=>{
 		for (var key in tokens){
 			let postings=[];
 			for (var i in tokens[key]) {
+				if (stopwords[i])continue;
 				postings.push(tokens[key][i]);
 			}
 			tokenpostings[key]=postings;

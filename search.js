@@ -52,8 +52,11 @@ let simplerank=(db,field,tokenpostings,opts)=>{
 	const dochits={},freq={};
 	const combinepostings=postings=>{
 		let out=[];
-		postings.forEach( p=>out=out.concat(p));
-		return out.sort();
+		for (var i=0;i<postings.length;i++){
+			out=out.concat(postings[i]);
+		};
+		out.sort( (a,b)=>a-b );
+		return out;
 	}
 	const postings=[];
 	for (var term in tokenpostings){
@@ -73,18 +76,17 @@ let simplerank=(db,field,tokenpostings,opts)=>{
 		freq[i]={termfreq:posting.length,docfreq:ndoc};
 	}
 
-	const out=[];
+	let out=[];
 
 	let averagelength=db.averagelength(field) ;
-
 	for (let doc in dochits){
 		const hits=dochits[doc];
 		const n=parseInt(doc);
 
-		let score=0,lastdoc=-1;
+		let score=1,lastdoc=-1;
 		for (let i=0;i<hits.length;i++){
 			if (hits[i]!==lastdoc){
-				score+=5;
+				score*=10;
 			} else {
 				score*=1.05;
 			}
@@ -99,6 +101,14 @@ let simplerank=(db,field,tokenpostings,opts)=>{
 			if (n>=opts.searchrange[0]&&n<=opts.searchrange[1])	out.push([n,score]);
 		} else {
 			out.push([n,score]);
+		}
+	}
+
+	if (opts.exclude){
+		const binfo=db.findbook(opts.exclude);
+		if (binfo.range){
+			let s=binfo.range[0],e=binfo.range[1];
+			out=out.filter( item=> item[0]<s || item[0]>e )
 		}
 	}
 	out.sort((a,b)=>b[1]-a[1]);

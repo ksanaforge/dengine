@@ -1,4 +1,4 @@
-const {comparesegment,parsesegmentid,LANGSEP}=require("./segment");
+const {comparesegment,parsesegmentid,SEGSEP,LANGSEP}=require("./segment");
 const {buildindex}=require("./indexer");
 const {parseTofind}=require("./search");
 const {createpages}=require("./paging");
@@ -8,7 +8,7 @@ const {open,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
 	getbookrange,search,setlogger}=require("./jsdb");
 
 const API={
-	comparesegment,parsesegmentid,LANGSEP,TOKEN_REGEX,
+	comparesegment,parsesegmentid,LANGSEP,SEGSEP,TOKEN_REGEX,
 	buildindex,createpages,build,open,fetchidarr,readpage,
 	findtokens,searchtokens,search,parseTofind,
 	packintarr:require("./packintarr"),
