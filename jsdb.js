@@ -1,5 +1,6 @@
 'use strict';
 const Db=require("./db");
+const {concordance}=require("./concordance")
 let log=()=>{console.log.call(arguments)};
 let dbpool={};
 let verbose=false;
@@ -231,8 +232,9 @@ var search=(dbname,field,tokens,opts,cb)=>{
 			toload=toload.concat(tokens[key]);
 		}
 	}
-	
+	if (opts.logger) opts.logger("fetching postings. "+toload.length);
 	fetchpostings(dbname,field,toload,(postings,db)=>{
+		if (opts.logger) opts.logger("posting fetched.");
 		let tokenpostings={};
 		for (var key in tokens){
 			let postings=[];
@@ -242,6 +244,7 @@ var search=(dbname,field,tokens,opts,cb)=>{
 			}
 			tokenpostings[key]=postings;
 		}
+		if (opts.logger) opts.logger("ranking");
 		cb(simplerank(db,field,tokenpostings,opts),db);
 	})
 }
@@ -258,6 +261,6 @@ if (typeof window !=="undefined") {
 	window.jsonp=jsonp;
 }
 module.exports={
-	open,fetchidarr,readpage,findtokens,
+	open,fetchidarr,readpage,findtokens,concordance,
 	getbookrange,fetchpostings,search,setlogger
 }

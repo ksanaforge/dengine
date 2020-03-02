@@ -3,9 +3,10 @@ const {buildindex}=require("./indexer");
 const {parseTofind}=require("./search");
 const {createpages}=require("./paging");
 const {build}=require("./builder");
+
 const {tokenize,TOKEN_REGEX}=require("./tokenizer");
 const {open,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
-	getbookrange,search,setlogger}=require("./jsdb");
+	getbookrange,search,concordance,setlogger}=require("./jsdb");
 
 const API={
 	comparesegment,parsesegmentid,LANGSEP,SEGSEP,TOKEN_REGEX,
@@ -13,6 +14,7 @@ const API={
 	findtokens,searchtokens,search,parseTofind,
 	packintarr:require("./packintarr"),
 	fetchpostings,getbookrange,tokenize,
+	concordance,
 	setlogger
 }
 if (typeof window!=="undefined"){
