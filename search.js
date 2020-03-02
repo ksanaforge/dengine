@@ -58,11 +58,11 @@ let simplerank=(db,field,tokenpostings,opts)=>{
 		out.sort( (a,b)=>a-b );
 		return out;
 	}
-	const postings=[];
+	const postings=[] , termweights=[];
 	for (var term in tokenpostings){
 		postings.push(combinepostings(tokenpostings[term].map(item=>item[1]) ));
+		//termweights.push( db.termweight(term,field));
 	}
-	
 	for (let i=0;i<postings.length;i++) {
 		let posting=postings[i],ndoc=0;
 
@@ -77,20 +77,19 @@ let simplerank=(db,field,tokenpostings,opts)=>{
 	}
 
 	let out=[];
-
 	let averagelength=db.averagelength(field) ;
 	for (let doc in dochits){
 		const hits=dochits[doc];
 		const n=parseInt(doc);
 
-		let score=1,lastdoc=-1;
+		let score=1,lastterm=-1;
 		for (let i=0;i<hits.length;i++){
-			if (hits[i]!==lastdoc){
-				score*=10;
+			if (hits[i]!==lastterm){
+				score*=10;//termweights[ hits[i] ];
 			} else {
 				score*=1.05;
 			}
-			lastdoc=hits[i];
+			lastterm=hits[i];
 		}
 
 		const doclen=db.getdoclen(field,n);

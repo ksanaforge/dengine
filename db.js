@@ -15,6 +15,7 @@ const Db=function(_d){
 	let tokenss={};
 	let postingss={};
 	let freqtokens={};
+	let wordcounts={};
 
 
 	let issearchready=f=>{
@@ -226,6 +227,7 @@ const Db=function(_d){
 			freqtokens[meta.field]=commontokens(tokenss[meta.field]);
 		} else if (meta.type=="doclen"){
 			doclens[meta.field]=unpack3(payload);
+			wordcounts[meta.field]=meta.wordcount;
 		}
 	}
 	let settexts=(meta,text)=>{
@@ -385,11 +387,17 @@ const Db=function(_d){
 	
 	let fields=()=>db.fields;
 	let deflated=()=>db.txtdeflated;
-	let averagelength=(field)=>{
+	let averagelength=field=>{
 		const at=db.fields.indexOf(field);
 		if (at==-1)return -1;
 
 		return db.txtlengths[at] / db.txtstarts[db.txtstarts.length-1];
+	}
+	let termweight=(term,field)=>{
+		const average= wordcounts[field] / tokenss[field].length;
+		const seq=tokenss[field].indexOf(term);
+		const posting=postingss[field][seq];
+		return posting.length / average;	
 	}
 	load();
 	let getdoclen=(field,docid)=>doclens[field][docid];
@@ -429,7 +437,7 @@ const Db=function(_d){
 		istextready,issearchready,ispostingready,deflated,
 		fetch,setdata,basedir,id2seq,seq2id,getneighbour,tokenseq,
 		findtokens,getpostings,getdoclen,gettokens,findbook,
-		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength
+		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight
 	}
 }
 module.exports=Db;
