@@ -1,6 +1,6 @@
 'use strict';
 const Db=require("./db");
-const {concordance}=require("./concordance")
+const {concordancesearch}=require("./concordance");
 let log=()=>{console.log.call(arguments)};
 let dbpool={};
 let verbose=false;
@@ -54,7 +54,7 @@ const loadTokens=(db,cb)=>{
 
 	clearInterval(tokenTimer);
 	tokentrycount=0;
-	const fields=db.fields();
+	const fields=db.getfields();
 	const files=[];
 	for (let field of fields){
 		if (!db.gettokens(field)){
@@ -80,7 +80,7 @@ const openSearchable=(name,field,cb)=>{
 	open(name,db=>{
 		if (typeof field=="function"){
 			cb=field;
-			field=db.fields;
+			field=db.getfields();
 		}
 		if (db.issearchready(field)){
 			cb(db);
@@ -204,7 +204,20 @@ const fetchidarr=(dbname,idarr,cb)=>{
 	});
 }
 
-
+const concordance=(dbname,field,token,opts,cb)=>{
+	if (typeof opts=="function"){
+		cb=opts;
+		opts={};
+	}
+	const tokens=[[token,-1]];
+	fetchpostings(dbname,field,tokens,(postings,db)=>{
+		const idarr=postings[0][1].map( item=> db.seq2id(item) );
+		fetchidarr(dbname,idarr,data=>{
+			const texts=data.map( item=>item[db.fieldseq(field)+1]);
+			cb(concordancesearch(db,token,texts),db);
+		})
+	});
+}
 
 const {simplerank,weightrank}=require("./search");
 var search=(dbname,field,tokens,opts,cb)=>{
@@ -247,10 +260,28 @@ var search=(dbname,field,tokens,opts,cb)=>{
 		cb(weightrank(db,field,tokenpostings,opts),db);
 	})
 }
-const getbookrange=(dbname,prefix,cb)=>{
+const expandnipata=(nipata)=>{
+	const shorthand={vi:"pm~pvr",ni:'dn~mil',ab:'ds~patthana'}
+	return shorthand[nipata]?shorthand[nipata]:nipata;
+}
+const getbookrange=(dbname,nipata,cb)=>{
 	open(dbname,db=>{
-		let bookranges=db.findbook(prefix);
-		cb(bookranges,db);
+		nipata=expandnipata(nipata);
+		const arr=nipata.split("~");
+		let res=null;
+		arr.filter(item=>item.length);
+		let serials=db.getSerials();
+		
+		if (arr.length==1){
+			res=db.findbook(arr[0]);
+			res.isscope=serials.indexOf(arr[0])>=0; //Not using single book as scope
+			res.single=true;
+		} else {
+			let from=db.findbook(arr[0]);
+			let to=db.findbook(arr[1]);
+			if (from&&to)res={isscope:true, range:[from.range[0],to.range[1]]};
+		}
+		cb(res,db);
 	})
 }
 const setlogger=logfunc=>{

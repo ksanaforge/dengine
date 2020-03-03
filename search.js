@@ -69,11 +69,12 @@ let weightrank=(db,field,tokenpostings,opts)=>{
 			}
 		}
 	}
-	const out=[];
+	let out=[];
 	for (let doc in scores){
+		doc=parseInt(doc);
 		const score=scores[doc];
 		if (opts.searchrange){
-			if (doc>=opts.searchrange[0]&&n<=opts.searchrange[1])	out.push([doc,score]);
+			if (doc>=opts.searchrange[0]&&doc<=opts.searchrange[1])	out.push([doc,score]);
 		} else {
 			out.push([doc,score]);
 		}
