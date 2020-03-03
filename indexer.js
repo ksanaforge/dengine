@@ -1,10 +1,5 @@
-const {tokenize}=require("./tokenizer");
-const stopwords={the:true,and:true,that:true,this:true,with:true,for:true,are:true,
-	has:true,have:true,they:true,you:true,then:true,from:true,was:true,his:true,but:true,them:true,
-	had:true,which:true,would:true,why:true,been:true,did:true,
-	how:true,when:true,what:true,will:true,who:true,were:true,him:true,your:true,
-	//And:true,The:true,This:true,They:true,When:true,Then:true,But:true,
-kho:true,hoti:true};
+const {tokenize,stopwords}=require("./tokenizer");
+
 
 const buildindex=(arr,opts={})=>{
 	const invert={},doclen=[];

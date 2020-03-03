@@ -214,7 +214,9 @@ const concordance=(dbname,field,token,opts,cb)=>{
 		const idarr=postings[0][1].map( item=> db.seq2id(item) );
 		fetchidarr(dbname,idarr,data=>{
 			const texts=data.map( item=>item[db.fieldseq(field)+1]);
-			cb(concordancesearch(db,token,texts),db);
+			let r=concordancesearch(db,token,field,texts);
+			if (opts.logger) opts.logger("concordance complete")
+			cb(r,db);
 		})
 	});
 }

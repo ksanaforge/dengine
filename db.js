@@ -400,6 +400,7 @@ const Db=function(_d){
 	let termweight=(term,field)=>{
 		const average= wordcounts[field] / tokenss[field].length;
 		const seq=bsearch(tokenss[field],term);
+		if (seq<0) return 0;//no weight
 		const posting=postingss[field][seq];
 		return  average / posting.length;	
 	}
