@@ -1,5 +1,6 @@
 'use strict';
 const {unpack3}=require("./packintarr");
+const bsearch=require("./bsearch");
 const {SEGSEP,LANGSEP,LEVELSEP,BOOKNAME_REGEXP}=require("./segment");
 const {commontokens,inflate}=require("./textcompress");
 const Db=function(_d){
@@ -22,7 +23,8 @@ const Db=function(_d){
 		let fields=f;
 		if (!Array.isArray(fields)) fields=[f];
 		for (var f of fields){
-			if (!tokenss[f]||!doclens[f])return false;
+			//if (!tokenss[f]||!doclens[f])return false;
+			if (!tokenss[f])return false;
 		}
 		return true;
 	}
@@ -45,8 +47,8 @@ const Db=function(_d){
 		var ready=true;
 		if (!tokenss[field] || !postingss[field])return false;
 		tokens.forEach((tk)=>{
-			var token=tk[0],seq;
-			seq=tokenss[field].indexOf(token);
+			var token=tk[0],seq=tk[1];
+			//seq=tokenss[field].indexOf(token);
 			if (seq<0 || !postingss[field] || typeof postingss[field][seq]=="undefined") {
 				ready=false;
 			}
@@ -190,7 +192,7 @@ const Db=function(_d){
 				token=tk[0]
 				seq=tk[1];//token with tokenseq
 			} else {
-				seq=tokenss[field].indexOf(token);
+				seq=bsearch(tokenss[field],token);
 			}
 			const fn=tokenseq2filename(field,seq);
 			if (fn) files[fn]=true;		
@@ -224,10 +226,10 @@ const Db=function(_d){
 			setposting(meta,payload);
 		} else if (meta.type=="token"){
 			tokenss[meta.field]=payload.split(/\r?\n/);
+			wordcounts[meta.field]=meta.wordcount;
 			freqtokens[meta.field]=commontokens(tokenss[meta.field]);
 		} else if (meta.type=="doclen"){
 			doclens[meta.field]=unpack3(payload);
-			wordcounts[meta.field]=meta.wordcount;
 		}
 	}
 	let settexts=(meta,text)=>{
@@ -274,9 +276,10 @@ const Db=function(_d){
 	let tokenseq=(token,field)=>{
 		const tokens=tokenss[field];
 		if (!tokens)return -1;
-		return tokens.indexOf(token);
+		return bsearch(tokens,token);
 	}
 	const tokencache={};
+
 	let findtokens=(field,patterns)=>{
 		const out={};
 		for (let key in patterns){
@@ -312,7 +315,7 @@ const Db=function(_d){
 					console.error("cannot load field",field);
 					continue;
 				}
-				seq=postingss[field].indexOf(token);
+				seq=bsearch(tokenss[field],token);
 			}
 
 			out[i][1]=postingss[field][seq];
@@ -395,9 +398,9 @@ const Db=function(_d){
 	}
 	let termweight=(term,field)=>{
 		const average= wordcounts[field] / tokenss[field].length;
-		const seq=tokenss[field].indexOf(term);
+		const seq=bsearch(tokenss[field],term);
 		const posting=postingss[field][seq];
-		return posting.length / average;	
+		return  average / posting.length;	
 	}
 	load();
 	let getdoclen=(field,docid)=>doclens[field][docid];

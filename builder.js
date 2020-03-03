@@ -102,13 +102,13 @@ const build=(meta,raw)=>{
 		idxstarts.push(pagestart);
 		postingss[i]=null; //release some memory
 
-		let obj={name:meta.name,field:meta.fields[i],type:"token"};
+		let obj={name:meta.name,field:meta.fields[i],wordcount:wordcounts[i],type:"token"};
 		str=packstr(obj,tokenss[i]);
 		outfn=meta.outdir+meta.name+"."+meta.fields[i]+".token.js";
 		if (verbose) console.log("writing tokens",outfn,"length",str.length);
 		if (writetodisk) fs.writeFileSync( outfn , str,"utf8");
 
-		obj={name:meta.name,field:meta.fields[i],wordcount:wordcounts[i],type:"doclen"};
+		obj={name:meta.name,field:meta.fields[i],type:"doclen"};
 		str=packstr(obj,pack3(doclens[i]));
 		outfn=meta.outdir+meta.name+"."+meta.fields[i]+".doclen.js";
 		if (verbose) console.log("write doclen,length",str.length);

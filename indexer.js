@@ -28,7 +28,11 @@ const buildindex=(arr,opts={})=>{
 	for (var key in invert){
 		out.push([key, invert[key] ]);
 	}
-	out.sort((a,b)=>b[1].length-a[1].length);
+	//alphabetically
+	out.sort(function(a,b){return (a[0]==b[0])?0:((a[0]>b[0])?1:-1)});
+
+	//length of posting
+	//out.sort((a,b)=>b[1].length-a[1].length);
 	return {inverted:out,doclen,wordcount};
 }
 module.exports={

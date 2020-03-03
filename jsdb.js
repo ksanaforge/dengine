@@ -47,7 +47,7 @@ const open=(name,cb)=>{
 
 var tokenTimer=0,tokentrycount=0;
 const loadTokens=(db,cb)=>{ 
-	if (db.doclen){
+	if (db.issearchready()){
 		cb(db)
 		return;
 	}
@@ -59,7 +59,7 @@ const loadTokens=(db,cb)=>{
 	for (let field of fields){
 		if (!db.gettokens(field)){
 			files.push(db.basedir+"."+field+".token.js");
-			files.push(db.basedir+"."+field+".doclen.js");			
+			//files.push(db.basedir+"."+field+".doclen.js");			
 		}
 	}
 
@@ -118,7 +118,6 @@ const fetchpostings=(dbname,field,tokens,cb)=>{
 			clearInterval(postingTimer);
 			postingtrycount=0;
 			const files=db.filesFromTokens(field,tokens);
-
 			postingTimer=setInterval(()=>{
 				if (dbpool[dbname]) {
 					if (db.ispostingready(field,tokens)){
@@ -207,7 +206,7 @@ const fetchidarr=(dbname,idarr,cb)=>{
 
 
 
-const {simplerank}=require("./search");
+const {simplerank,weightrank}=require("./search");
 var search=(dbname,field,tokens,opts,cb)=>{
 	if (typeof opts=="function"){
 		cb=opts;
@@ -245,7 +244,7 @@ var search=(dbname,field,tokens,opts,cb)=>{
 			tokenpostings[key]=postings;
 		}
 		if (opts.logger) opts.logger("ranking");
-		cb(simplerank(db,field,tokenpostings,opts),db);
+		cb(weightrank(db,field,tokenpostings,opts),db);
 	})
 }
 const getbookrange=(dbname,prefix,cb)=>{

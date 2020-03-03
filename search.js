@@ -48,6 +48,47 @@ const fuzzilize=(token,prefix)=>{
 	}
 	return new RegExp(prefix+o,"ig");
 }
+let intersection=(arr1,arr2)=>{
+
+}
+let weightrank=(db,field,tokenpostings,opts)=>{
+	const scores={};
+	for (let term in tokenpostings){
+		const subterm=tokenpostings[term];
+		for (let i in subterm){
+			let weight=db.termweight(subterm[i][0],field);
+			if (weight>3) weight=3;
+			const postings=subterm[i][1];
+			let lastdoc=0,w=weight;
+			for (let j=0;j<postings.length;j++){
+				const doc=postings[j];
+				if (!scores[doc]) scores[doc]=1;
+				w=(lastdoc==doc)?w*0.5:weight;
+				scores[doc]+=w;
+				lastdoc=doc;
+			}
+		}
+	}
+	const out=[];
+	for (let doc in scores){
+		const score=scores[doc];
+		if (opts.searchrange){
+			if (doc>=opts.searchrange[0]&&n<=opts.searchrange[1])	out.push([doc,score]);
+		} else {
+			out.push([doc,score]);
+		}
+	}
+
+	if (opts.exclude){
+		const binfo=db.findbook(opts.exclude);
+		if (binfo.range){
+			let s=binfo.range[0],e=binfo.range[1];
+			out=out.filter( item=> item[0]<s || item[0]>e )
+		}
+	}
+	out.sort((a,b)=>b[1]-a[1]);
+	return out;
+}
 let simplerank=(db,field,tokenpostings,opts)=>{
 	const dochits={},freq={};
 	const combinepostings=postings=>{
@@ -85,17 +126,19 @@ let simplerank=(db,field,tokenpostings,opts)=>{
 		let score=1,lastterm=-1;
 		for (let i=0;i<hits.length;i++){
 			if (hits[i]!==lastterm){
-				score*=10;//termweights[ hits[i] ];
+				score*=10; //termweights[ hits[i] ];
 			} else {
 				score*=1.05;
 			}
 			lastterm=hits[i];
 		}
 
+		/*
 		const doclen=db.getdoclen(field,n);
 		let t=(doclen/averagelength);
 		t=1/Math.sqrt(t);
 		score *= t;
+		*/
 		if (opts.searchrange){
 			if (n>=opts.searchrange[0]&&n<=opts.searchrange[1])	out.push([n,score]);
 		} else {
@@ -114,4 +157,5 @@ let simplerank=(db,field,tokenpostings,opts)=>{
 
 	return out;
 }
-module.exports={ simplerank ,parseTofind}
+
+module.exports={ simplerank ,parseTofind, weightrank}
