@@ -1,5 +1,5 @@
 const {tokenize,stopwords}=require("./tokenizer")
-const concordancesearch=(db,word,field,texts)=>{
+const concordancesearch=(db,word,field,texts,opts)=>{
 	const scores={};
 	let power=0;
 	for (let i=0;i<texts.length;i++){

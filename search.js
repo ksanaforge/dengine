@@ -57,6 +57,10 @@ let intersectrank=(db,field,tokenpostings,opts)=>{
 			out=intersect(out,subterm[0][1]);
 		} else out=subterm[0][1];
 	}
+	if (opts.searchrange){
+		out=out.filter(doc=>doc>=opts.searchrange[0]&&doc<=opts.searchrange[1]);
+	}
+
 	out=out.map(item=>[item,1]);
 	return out;
 }

@@ -202,7 +202,12 @@ const concordance=(dbname,field,token,opts,cb)=>{
 	}
 	const tokens=[[token,-1]];
 	fetchpostings(dbname,field,tokens,(postings,db)=>{
-		const idarr=postings[0][1].map( item=> db.seq2id(item) );
+		let posting=postings[0][1];
+		if (opts.searchrange){
+			posting=posting.filter( doc=>doc>=opts.searchrange[0]&&doc<=opts.searchrange[1])
+		}
+		let idarr=posting.map( item=> db.seq2id(item) );
+
 		if (opts.setstatus) opts.setstatus("fetching segments "+idarr.length);
 		fetchidarr(dbname,idarr,data=>{
 			const texts=data.map( item=>item[db.fieldseq(field)+1]);
