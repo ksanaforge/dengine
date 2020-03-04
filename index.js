@@ -6,7 +6,7 @@ const {build}=require("./builder");
 
 const {tokenize,TOKEN_REGEX}=require("./tokenizer");
 const {open,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
-	getbookrange,search,concordance,setlogger}=require("./jsdb");
+	getshorthand,getbookrange,search,concordance,setlogger}=require("./jsdb");
 
 const API={
 	comparesegment,parsesegmentid,LANGSEP,SEGSEP,TOKEN_REGEX,
@@ -14,7 +14,7 @@ const API={
 	findtokens,searchtokens,search,parseTofind,
 	packintarr:require("./packintarr"),
 	fetchpostings,getbookrange,tokenize,
-	concordance,
+	concordance,getshorthand,
 	setlogger
 }
 if (typeof window!=="undefined"){

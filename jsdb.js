@@ -91,7 +91,6 @@ const openSearchable=(name,field,cb)=>{
 }
 
 const findtokens=(dbname,patterns,cb)=>{
-	log("findtokens");
 	openSearchable(dbname, db=>{
 		let pat ,len=0;
 		for (var term in patterns){
@@ -100,12 +99,9 @@ const findtokens=(dbname,patterns,cb)=>{
 				len=term.length;
 			}
 		}
-		log("guesslanguage");
 		const lang=db.guesslanguage(pat);
 		
 		const tokens=db.findtokens(lang,patterns);
-		log("found token");
-		if (verbose) console.log("found token",tokens);
 		cb(tokens,db,lang);
 	});	
 }
@@ -165,9 +161,7 @@ const readpage=(dbname,opts,cb)=>{
 var fetchTimer=0,fetchtrycount=0;
 const fetchidarr=(dbname,idarr,cb)=>{
 	open(dbname,db=>{
-		if (verbose) console.log("fetch idarr open");
 		if (db.istextready(idarr)){
-			if (verbose) console.log("text ready 1");
 			cb(db.fetch(idarr),db);
 		} else {
 			clearInterval(fetchTimer);
@@ -176,14 +170,12 @@ const fetchidarr=(dbname,idarr,cb)=>{
 
 			fetchTimer=setInterval(()=>{
 				if (db.istextready(idarr)){
-					if (verbose) console.log("text ready 2");
 					clearInterval(fetchTimer);
 					cb(db.fetch(idarr) ,db);
 				} else {
 					if (db.deflated()){
 						loadTokens(db,db=>{
 							if(db.istextready(idarr)){
-								if (verbose) console.log("text ready 3");
 								cb( db.fetch(idarr),db);
 							}
 						})
@@ -197,7 +189,6 @@ const fetchidarr=(dbname,idarr,cb)=>{
 
 			},150);
 
-			if (verbose) console.log("load text files",files);
 			loadscript(files);
 		}
 
@@ -212,16 +203,17 @@ const concordance=(dbname,field,token,opts,cb)=>{
 	const tokens=[[token,-1]];
 	fetchpostings(dbname,field,tokens,(postings,db)=>{
 		const idarr=postings[0][1].map( item=> db.seq2id(item) );
+		if (opts.setstatus) opts.setstatus("fetching segments "+idarr.length);
 		fetchidarr(dbname,idarr,data=>{
 			const texts=data.map( item=>item[db.fieldseq(field)+1]);
 			let r=concordancesearch(db,token,field,texts);
-			if (opts.logger) opts.logger("concordance complete")
+			if (opts.setstatus) opts.setstatus("concordance complete")
 			cb(r,db);
 		})
 	});
 }
 
-const {simplerank,weightrank}=require("./search");
+const Search=require("./search");
 var search=(dbname,field,tokens,opts,cb)=>{
 	if (typeof opts=="function"){
 		cb=opts;
@@ -246,9 +238,9 @@ var search=(dbname,field,tokens,opts,cb)=>{
 			toload=toload.concat(tokens[key]);
 		}
 	}
-	if (opts.logger) opts.logger("fetching postings. "+toload.length);
+	if (opts.setstatus) opts.setstatus("fetching postings. "+toload.length);
 	fetchpostings(dbname,field,toload,(postings,db)=>{
-		if (opts.logger) opts.logger("posting fetched.");
+		if (opts.setstatus) opts.setstatus("posting fetched.");
 		let tokenpostings={};
 		for (var key in tokens){
 			let postings=[];
@@ -258,18 +250,23 @@ var search=(dbname,field,tokens,opts,cb)=>{
 			}
 			tokenpostings[key]=postings;
 		}
-		if (opts.logger) opts.logger("ranking");
-		cb(weightrank(db,field,tokenpostings,opts),db);
+		if (opts.setstatus) opts.setstatus("ranking");
+
+		let ranking=Search.weightrank;
+		if (opts.ranking) ranking=Search[opts.ranking+"rank"];
+		cb(ranking(db,field,tokenpostings,opts),db);
 	})
 }
+const shorthand={vi:"pm-pvr",ni:'dn-mil',ab:'ds-patthana',
+vb:"pj-as",ivb:"ipj-ias",kn:"kp-mil"}
 const expandnipata=(nipata)=>{
-	const shorthand={vi:"pm~pvr",ni:'dn~mil',ab:'ds~patthana'}
 	return shorthand[nipata]?shorthand[nipata]:nipata;
 }
+let getshorthand=()=>shorthand;
 const getbookrange=(dbname,nipata,cb)=>{
 	open(dbname,db=>{
 		nipata=expandnipata(nipata);
-		const arr=nipata.split("~");
+		const arr=nipata.split("-");
 		let res=null;
 		arr.filter(item=>item.length);
 		let serials=db.getSerials();
@@ -294,5 +291,5 @@ if (typeof window !=="undefined") {
 }
 module.exports={
 	open,fetchidarr,readpage,findtokens,concordance,
-	getbookrange,fetchpostings,search,setlogger
+	getbookrange,fetchpostings,search,setlogger,getshorthand
 }

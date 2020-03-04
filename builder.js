@@ -57,8 +57,8 @@ const build=(meta,raw)=>{
 		const at=line.indexOf(",");
 		let key=line.substr(0,at);
 
-		if (key.indexOf(":")==-1) {
-			key=key.replace(/^pli-tv-/,"").replace(/^bu-vb-/,"");
+		if (key.indexOf(":")==-1) {//blurb
+			key=key.replace(/^pli-tv-/,"").replace(/^bu-vb-/,"").replace(/^bi-vb-/,"i");
 			blurb[key]=line.substr(at+1).replace(LANGSEP,"");
 			continue;	
 		}

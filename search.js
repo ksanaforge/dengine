@@ -1,4 +1,5 @@
 'use strict';
+const {intersect}=require("./array");
 const {TOKEN_CHARS}=require("./tokenizer");
 let parseTofind=(tofind)=>{
 	tofind=tofind.trim();
@@ -48,11 +49,21 @@ const fuzzilize=(token,prefix)=>{
 	}
 	return new RegExp(prefix+o,"ig");
 }
-let intersection=(arr1,arr2)=>{
-
+let intersectrank=(db,field,tokenpostings,opts)=>{
+	let out=[];
+	for (let term in tokenpostings){
+		const subterm=tokenpostings[term];
+		if (out.length) {
+			out=intersect(out,subterm[0][1]);
+		} else out=subterm[0][1];
+	}
+	out=out.map(item=>[item,1]);
+	return out;
 }
 let weightrank=(db,field,tokenpostings,opts)=>{
 	const scores={};
+
+
 	for (let term in tokenpostings){
 		const subterm=tokenpostings[term];
 		for (let i in subterm){
@@ -159,4 +170,4 @@ let simplerank=(db,field,tokenpostings,opts)=>{
 	return out;
 }
 
-module.exports={ simplerank ,parseTofind, weightrank}
+module.exports={ simplerank ,parseTofind, weightrank, intersectrank}

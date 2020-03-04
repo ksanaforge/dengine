@@ -1,6 +1,7 @@
 'use strict';
 const bookname=[
 'pli-tv-bu-pm',
+'pli-tv-bi-pm',
 'pli-tv-bu-vb-pj',
 'pli-tv-bu-vb-ss',
 'pli-tv-bu-vb-ay',
@@ -9,7 +10,6 @@ const bookname=[
 'pli-tv-bu-vb-pd',
 'pli-tv-bu-vb-sk',
 'pli-tv-bu-vb-as',
-'pli-tv-bi-pm',
 'pli-tv-bi-vb-pj',
 'pli-tv-bi-vb-ss',
 'pli-tv-bi-vb-ay',
