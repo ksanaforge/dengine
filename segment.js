@@ -26,7 +26,7 @@ const bookname=[
 "thag","thig","ja","mnd","cnd","ps",
 "tha-ap","thi-ap","bv","cp","ne","pe","mil",
 
-"ds","vb","dt","pp","kv","ya","patthana"
+"ds","vb","dt","pp","ya","patthana","kv"
 
  ];
 
@@ -62,7 +62,7 @@ const parsesegmentid= id=>{
 		at=id.indexOf(SEGSEP);
 	}
 
-	if (at==-1)	return [id,0,0,0,0];
+	if (at==-1)	return [id,0,0,0,0,0];
 
 	const fn=id.substr(0,at);
 	const para=id.substr(at+1);
@@ -70,8 +70,14 @@ const parsesegmentid= id=>{
 	const pr=para.split(".");
 
 	let m=ch[0].match(BOOKNAME_REGEXP);
-	obj[0]=m[1];
-	obj[1]=m[2];
+	if (!m) {
+		obj[0]=''; //no ascii prefix
+		obj[1]=ch[0];
+	} else {
+		obj[0]=m[1];
+		obj[1]=m[2];		
+	}
+
 	obj[2]=ch[1];
 	obj[3]=ch[2];//abhidhamma ds2.1.1:0.1
 	for (var i=0;i<pr.length;i++){
@@ -115,6 +121,35 @@ const packsegmentid=idarr=>{
 	}
 	return out;
 }
+const packcontinuouspage=idarr=>{
+	var prev=''
+	let out=[],pageline=0,pagelines=[];
+	let pagecount=0,lastbk='',lastpg='';
+	for (let id of idarr){
+		let idobj=parsesegmentid(id);
+		let bk=idobj[0]+idobj[1],page=idobj[4],sentenceid=idobj[5];
+	
+		if (lastbk!==bk && lastbk) {
+			pagelines.push(pageline);//for last page
+			out.push(lastbk+SEGSEP+"["+pagelines.join()+"]");
+			pagelines=[];
+		}
 
-module.exports={comparesegment,parsesegmentid,packsegmentid,SEGSEP,LANGSEP,LEVELSEP,
+		if (lastpg!==page) {
+			pagelines.push(pageline);
+		}
+
+		pageline++;
+		lastpg=page;
+		lastbk=bk;
+	}
+	pagelines.push(pageline);//for last page
+	out.push(lastbk+SEGSEP+"["+pagelines.join()+"]");
+	return out;
+}
+
+module.exports={comparesegment,parsesegmentid,
+	packsegmentid,
+	packcontinuouspage,
+	SEGSEP,LANGSEP,LEVELSEP,
 BOOKNAME_REGEXP}

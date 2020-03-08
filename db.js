@@ -4,22 +4,25 @@ const bsearch=require("./bsearch");
 const {SEGSEP,LANGSEP,LEVELSEP,BOOKNAME_REGEXP}=require("./segment");
 const {commontokens,inflate}=require("./textcompress");
 const Db=function(_d){
-	let db=Object.assign({},_d);
+	const db=Object.assign({},_d);
 	const basedir=db.name+"/"+db.name;
-	let bookhierarchy={};
-	let booksentences={}; //bookid as key, value is array of sentence id, startseq
-	let bookstarts=[];//start seq of each book
-	let booknames=[];
-	let txts=[]; 
-	let indexes={};
-	let doclens={};
-	let tokenss={};
-	let postingss={};
-	let freqtokens={};
-	let wordcounts={};
+	const bookhierarchy={};
+	const booksentences={}; //bookid as key, value is array of sentence id, startseq
+	const bookstarts=[];//start seq of each book
+	const booknames=[];
+	const txts=[]; 
+	const indexes={};
+	const doclens={};
+	const toc={};
+	const notes={};
+	const tokenss={};
+	const postingss={};
+	const freqtokens={};
+	const wordcounts={};
 
 
-	let issearchready=f=>{
+	const issearchready=f=>{
+		if (!db.textonly)return false;
 		let fields=f;
 		if (!Array.isArray(fields)) fields=[f];
 		for (var f of fields){
@@ -28,7 +31,7 @@ const Db=function(_d){
 		}
 		return true;
 	}
-	let istextready=idarr=>{
+	const istextready=idarr=>{
 		var ready=true;
 		if (db.txtdeflated) {
 			if (!issearchready(db.fields)) {
@@ -43,7 +46,7 @@ const Db=function(_d){
 		return ready;
 	}
 
-	let ispostingready=(field,tokens)=>{
+	const ispostingready=(field,tokens)=>{
 		var ready=true;
 		if (!tokenss[field] || !postingss[field])return false;
 		tokens.forEach((tk)=>{
@@ -55,9 +58,57 @@ const Db=function(_d){
 		});
 		return ready;
 	}
+	const parsepagenum=id=>{
+		let at=id.indexOf(SEGSEP);
+		let bookname=id.substr(0,at);
+		const bk=booknames.indexOf(bookname);
+		let page=id.slice(at+1) ,ln=1;
+		at=page.indexOf(LEVELSEP);
+		if (at>-1) {
+			ln=parseInt( page.slice(at+1));
+		}
+		if (isNaN(ln)) ln=1;
+		let pg=parseInt(page);
+		return {bookname,bk,pg,ln};		
+	}
 
+	const getbookpagelinecount=(book,pagenum)=>{
+		return booksentences[book][pagenum]-booksentences[book][pagenum-1];
+	}
+	const getbookpagecount=(book)=>{
+		return booksentences[book].length - 1;
+	}
+	//return entire page, last line of previous page, first line of next page
+	const getneighbour_cont=(prefix,opts)=>{
+		const {bookname,bk,pg} = parsepagenum(prefix);
+		const idarr=[],seqarr=[];
+		
+		let seq=id2seq_cont(bookname+SEGSEP+pg);
 
-	let getneighbour=(prefix,opts)=>{
+		if (pg>1) {
+			const lcount=getbookpagelinecount(bookname,pg-1);
+			idarr.push(bookname+SEGSEP+(pg-1)+LEVELSEP+lcount);
+			seqarr.push(seq-1);
+		}
+		const linecount=getbookpagelinecount(bookname,pg);
+		for (let i=1;i<linecount+1;i++){
+			idarr.push(bookname+SEGSEP+pg+LEVELSEP+i);
+			seqarr.push(seq);
+			seq++;
+		}
+		const pcount=getbookpagecount(bookname) //extra ending page
+		if (pg<pcount) {
+			idarr.push(bookname+SEGSEP+(pg+1)+LEVELSEP+"1");
+			seqarr.push(seq);
+		}
+		return [idarr,seqarr];
+	}
+
+	const getneighbour=(prefix,opts)=>{
+		if (db.continuouspage) {
+			return getneighbour_cont(prefix,opts)
+		}
+
 		let out=[], idarr=[],seqarr=[];
 
 		const max=opts.max;
@@ -73,7 +124,6 @@ const Db=function(_d){
 		}
 
 		if (!bookid) bookid=prefix;
-		
 		if (booksentences[bookid]) {
 			let n=booknames.indexOf(bookid);
 			let seq=bookstarts[n];
@@ -113,7 +163,16 @@ const Db=function(_d){
 			return 0; //book not found
 		}
 	}
-	let id2seq=id=>{ //seq starts from 1, 0 ==not found
+
+	const id2seq_cont=id=>{
+		const {bookname,pg,ln} = parsepagenum(id);
+		if (isNaN(pg))return -1;
+		if (!booksentences[bookname])return -1;
+		return booksentences[bookname][pg-1]+(ln-1);
+	}
+	const id2seq=id=>{ //seq starts from 1, 0 ==not found
+		if (db.continuouspage) return id2seq_cont(id);
+	
 		const at=id.indexOf(SEGSEP);
 		let bookid=id.substr(0,at);
 		const bookseq=booknames.indexOf(bookid);
@@ -128,7 +187,24 @@ const Db=function(_d){
 		}
 		return 0;
 	}
-	let seq2id=seq=>{
+	const seq2id_cont=seq=>{
+		let book='',page=0,sen=0;
+		for (let i=0;i<booknames.length;i++){
+			const pages=booksentences[i];
+			book=booknames[i];
+			for (let j=0;j<pages.length;j++) {
+				if (pages[j]>seq) {
+					page=j;
+					sen=pages[j]-seq;
+					break;
+				}
+			}
+			if (sen) break;
+		}
+		return book+SEGSEP+page+LEVELSEP+sentence;
+	}
+	const seq2id=seq=>{
+		if (db.continuouspage) return seq2id_cont(seq); 
 		for (var i=0;i<bookstarts.length;i++){
 			if (seq<bookstarts[i]) {
 				const at=seq-bookstarts[i-1];
@@ -138,7 +214,7 @@ const Db=function(_d){
 		}
 		return "";
 	}
-	let seq2page=(seq,field,type)=>{
+	const seq2page=(seq,field,type)=>{
 		let starts=db.txtstarts;
 		if (field){
 			var q=fieldseq(field);
@@ -149,20 +225,20 @@ const Db=function(_d){
 			if (seq<starts[i]) return i-1;
 		}
 	}
-	let id2filename=id=>{
+	const id2filename=id=>{
 		let seq=id2seq(id);
 		return seq2filename(seq);
 	}
-	let seq2filename=seq=>{
+	const seq2filename=seq=>{
 		const page=seq2page(seq,"","txt");
 		if (page>-1)return basedir+".txt."+page+".js";		
 	}
-	let tokenseq2filename=(field,tkseq)=>{
+	const tokenseq2filename=(field,tkseq)=>{
 		const page=seq2page(tkseq,field,"idx");
 		if (page>-1)return basedir+"."+field+".idx."+page+".js";
 	}
 
-	let forEachId=(idarr,cb)=>{
+	const forEachId=(idarr,cb)=>{
 		if (!Array.isArray(idarr)) idarr=[idarr];
 		for (let id of idarr) {
 			const seq=id2seq(id);
@@ -170,13 +246,13 @@ const Db=function(_d){
 		}
 	}
 
-	let filesFromSeq=seqarr=>{
+	const filesFromSeq=seqarr=>{
 		const files={};
 		seqarr.forEach( seq=> files[seq2filename(seq)]=true);
 		return Object.keys(files).filter(f=>!!f);
 	}
 
-	let filesFromId=idarr=>{
+	const filesFromId=idarr=>{
 		const files={};
 		forEachId(idarr,(id,seq)=>{
 			let fn=id2filename(id);
@@ -184,7 +260,7 @@ const Db=function(_d){
 		});
 		return Object.keys(files);
 	}
-	let filesFromTokens=(field,tokens)=>{
+	const filesFromTokens=(field,tokens)=>{
 		const files={};
 		tokens.forEach((tk)=>{
 			var token=tk,seq;
@@ -201,11 +277,10 @@ const Db=function(_d){
 		});
 		return Object.keys(files);
 	}
-	let fetch=(idarr)=>{
+	const fetch=(idarr)=>{
 		const out=[];
 		forEachId(idarr,(id,seq)=>{
 			let content=txts[seq].split(LANGSEP);
-
 			let o=[id];
 			for (var i=0;i<db.fields.length;i++){
 				if (db.txtdeflated) {
@@ -221,7 +296,7 @@ const Db=function(_d){
 		return out;
 	}
 
-	let setdata=(meta,payload)=>{
+	const setdata=(meta,payload)=>{
 		if (meta.type=="txt"){
 			settexts(meta,payload);
 		} else if (meta.type=="idx"){
@@ -232,15 +307,19 @@ const Db=function(_d){
 			freqtokens[meta.field]=commontokens(tokenss[meta.field]);
 		} else if (meta.type=="doclen"){
 			doclens[meta.field]=unpack3(payload);
+		} else if (meta.type=="toc"){
+			toc[meta.field]=payload.split(/\r?\n/);
+		} else if (meta.type=="notes"){
+			notes[meta.field]=payload.split(/\r?\n/);
 		}
 	}
-	let settexts=(meta,text)=>{
+	const settexts=(meta,text)=>{
 		const lines=text.split(/\r?\n/);
 		for (var i=0;i<lines.length;i++) {
 			txts[meta.start+i] = lines[i];
 		}
 	}
-	let setposting=(meta,payload)=>{
+	const setposting=(meta,payload)=>{
 		const dbpostings=postingss[meta.field]||[];
 		postingss[meta.field]=dbpostings;
 		const postings=payload.split(/\r?\n/)
@@ -249,7 +328,7 @@ const Db=function(_d){
 		}
 	}
 	const guesscache={};
-	let guesslanguage=(pat)=>{
+	const guesslanguage=(pat)=>{
 		if (guesscache[pat]) {
 			console.log("guess cache")
 			return guesscache[pat];
@@ -275,14 +354,14 @@ const Db=function(_d){
 		guesscache[pat]=lang;
 		return lang;
 	}
-	let tokenseq=(token,field)=>{
+	const tokenseq=(token,field)=>{
 		const tokens=tokenss[field];
 		if (!tokens)return -1;
 		return bsearch(tokens,token);
 	}
-	const tokencache={};
 
-	let findtokens=(field,patterns)=>{
+	const tokencache={};
+	const findtokens=(field,patterns)=>{
 		const out={};
 		for (let key in patterns){
 			let pat=patterns[key];
@@ -303,7 +382,7 @@ const Db=function(_d){
 		}
 		return out;
 	}
-	let getpostings=(field,tks)=>{
+	const getpostings=(field,tks)=>{
 		let out=Object.assign([],tks);
 
 		for (let i=0;i<tks.length;i++){
@@ -327,14 +406,18 @@ const Db=function(_d){
 		};
 		return out;
 	}
-	let buildbookhierarchy=()=>{
+	const buildbookhierarchy=()=>{
 		for (var i=0;i<booknames.length;i++){
 			let m=booknames[i].match(BOOKNAME_REGEXP);
 			if (!m){
-				debugger
+				//book hierarchy info cannot get from segid
+				//(nanchaun and pts, vol-pagenum
+				return;
 			}
+
 			let serialname=m[1];
 			let subbook=m[2];
+
 			let subsubbook=null;
 			let at=booknames[i].indexOf(".");
 			if (at>-1){
@@ -355,8 +438,8 @@ const Db=function(_d){
 			}
 		}
 	}
-	let getSerials=()=>Object.keys(bookhierarchy);
-	let getHierarchy=name=> {
+	const getSerials=()=>Object.keys(bookhierarchy);
+	const getHierarchy=name=> {
 		let m=name.match(BOOKNAME_REGEXP);
 		if (m[2]) {
 			return bookhierarchy[m[1]][parseInt(m[2])-1];
@@ -364,16 +447,19 @@ const Db=function(_d){
 			return bookhierarchy[name];	
 		}
 	}
-	let getBlurb=name=>db.blurb[name];
-	let load=()=>{
+	const getBlurb=name=>db.blurb[name];
+	const load=()=>{
 		let sentences=[],book='';
-		bookstarts=[0];
+		bookstarts.length=1;
+		bookstarts[0]=0;
 		db.segids=_d.segids.split(/\r?\n/);
+
 		for (var i=0;i<db.segids.length;i++) {
 			let id=db.segids[i];
 			if (id.indexOf(SEGSEP)>0) {
 				if (book){
 					bookstarts.push(i);
+					if (db.continuouspage) sentences=JSON.parse(sentences[0]);
 					booksentences[book]=sentences;
 					booknames.push(book);
 				}
@@ -384,31 +470,36 @@ const Db=function(_d){
 				sentences.push(id);
 			}
 		}
+		if (db.continuouspage) sentences=JSON.parse(sentences[0]);
+		
 		booksentences[book]=sentences;
 		bookstarts.push(i);
 		booknames.push(book);
 		buildbookhierarchy();
 	}
-	let fieldseq=field=>db.fields.indexOf(field);
-	let deflated=()=>db.txtdeflated;
-	let averagelength=field=>{
+	const fieldseq=field=>db.fields.indexOf(field);
+	const deflated=()=>db.txtdeflated;
+	const averagelength=field=>{
 		const at=db.fields(field);
 		if (at==-1)return -1;
 
 		return db.txtlengths[at] / db.txtstarts[db.txtstarts.length-1];
 	}
-	let termweight=(term,field)=>{
+	const termweight=(term,field)=>{
 		const average= wordcounts[field] / tokenss[field].length;
 		const seq=bsearch(tokenss[field],term);
 		if (seq<0) return 0;//no weight
 		const posting=postingss[field][seq];
 		return  average / posting.length;	
 	}
-	load();
-	let getdoclen=(field,docid)=>doclens[field][docid];
-	let gettokens=(field)=>tokenss[field];
-	let getfields=()=>db.fields;
-	let findbook=prefix=>{
+	
+	const searchable=()=>!db.textonly;
+	const getdoclen=(field,docid)=>doclens[field][docid];
+	const gettokens=(field)=>tokenss[field];
+	const getfields=()=>db.fields;
+	const withtoc=()=>db.withtoc;
+	const withnote=()=>db.withnote;
+	const findbook=prefix=>{
 		if (booksentences[prefix]){
 			const n=booknames.indexOf(prefix);
 			let start=bookstarts[n];
@@ -437,12 +528,14 @@ const Db=function(_d){
 		}
 		return null;
 	}
+	load();
 	return {
-		filesFromId,filesFromSeq,filesFromTokens,
+		filesFromId,filesFromSeq,filesFromTokens,searchable,
 		istextready,issearchready,ispostingready,deflated,getfields,
 		fetch,setdata,basedir,id2seq,seq2id,getneighbour,tokenseq,
 		findtokens,getpostings,getdoclen,gettokens,findbook,fieldseq,
-		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight
+		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
+		withtoc,withnote
 	}
 }
 module.exports=Db;

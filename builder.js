@@ -4,12 +4,12 @@ const {createpages}=require("./paging");
 const {pack3}=require("./packintarr");
 const {SPLITTER}=require("./tokenizer");
 const {commontokens,deflate}=require("./textcompress");
-const {packsegmentid,LANGSEP}=require("./segment");
+const {packsegmentid,packcontinuouspage,LANGSEP}=require("./segment");
 const fs=require("fs");
 const verbose=true;
 const writetodisk=true;
 const blurb={};
-const packstr=(meta,arr_str)=>{
+const packpayload=(meta,arr_str)=>{
 	var payload=arr_str;
 	if (Array.isArray(arr_str)){
 		payload=arr_str.join("\n");
@@ -25,6 +25,7 @@ const packstr=(meta,arr_str)=>{
 	return str;
 }
 
+
 const multifile=(dbname,field,type,outdir,lines,maxpagesize=128*1024)=>{
 	const pages=createpages(lines,maxpagesize);
 	for (var i=0;i<pages.length;i++){
@@ -32,7 +33,7 @@ const multifile=(dbname,field,type,outdir,lines,maxpagesize=128*1024)=>{
 		var meta={name:dbname,page:i,start:pages.meta.pagestart[i]};
 		if (field) meta.field=field;
 		if (type) meta.type=type;
-		const str=packstr(meta,pages[i]);
+		const str=packpayload(meta,pages[i]);
 		if (verbose) console.log("writing multifile",outfn,"length",str.length);
 		if (writetodisk) fs.writeFileSync( outfn , str,"utf8");
 	}
@@ -56,9 +57,10 @@ const build=(meta,raw)=>{
 		
 		const at=line.indexOf(",");
 		let key=line.substr(0,at);
-
+		if (!key) {
+			console.log("empty key ",line,i);
+		}
 		if (key.indexOf(":")==-1) {//blurb
-			key=key.replace(/^pli-tv-/,"").replace(/^bu-vb-/,"").replace(/^bi-vb-/,"i");
 			blurb[key]=line.substr(at+1).replace(LANGSEP,"");
 			continue;	
 		}
@@ -79,43 +81,47 @@ const build=(meta,raw)=>{
 			txtlengths[j]+=content[j].length;
 		}
 	}
-	
+	let outfn='';
+	if (!meta.textonly) {
+		for (j=0;j<fields.length;j++){
+			const {inverted,doclen,wordcount}=buildindex(fields[j],{termfreq:true});
+			const tokens=[],postings=[];
 
-	for (j=0;j<fields.length;j++){
-		const {inverted,doclen,wordcount}=buildindex(fields[j],{termfreq:true});
-		const tokens=[],postings=[];
+			for (var i=0;i<inverted.length;i++) {
+				tokens.push(inverted[i][0]);
+				postings.push(pack3(inverted[i][1]));
+			}
 
-		for (var i=0;i<inverted.length;i++) {
-			tokens.push(inverted[i][0]);
-			postings.push(pack3(inverted[i][1]));
+			tokenss.push(tokens);
+			postingss.push(postings);
+			doclens.push(doclen);
+			wordcounts.push(wordcount);
+		}		
+
+
+
+		let str="",idxstarts=[];
+		for (var i=0;i<fields.length;i++){
+			let pagestart=multifile(meta.name,meta.fields[i],"idx",meta.outdir,postingss[i]);
+			idxstarts.push(pagestart);
+			postingss[i]=null; //release some memory
+
+			let obj={name:meta.name,field:meta.fields[i],wordcount:wordcounts[i],type:"token"};
+			str=packpayload(obj,tokenss[i]);
+			outfn=meta.outdir+meta.name+"."+meta.fields[i]+".token.js";
+			if (verbose) console.log("writing tokens",outfn,"length",str.length);
+			if (writetodisk) fs.writeFileSync( outfn , str,"utf8");
+
+			obj={name:meta.name,field:meta.fields[i],type:"doclen"};
+			str=packpayload(obj,pack3(doclens[i]));
+			outfn=meta.outdir+meta.name+"."+meta.fields[i]+".doclen.js";
+			if (verbose) console.log("write doclen,length",str.length);
+			if (writetodisk) fs.writeFileSync(outfn, str ,"utf8" );
 		}
-
-		tokenss.push(tokens);
-		postingss.push(postings);
-		doclens.push(doclen);
-		wordcounts.push(wordcount);
-	}
-
-	let outfn="",str="",idxstarts=[];
-	for (var i=0;i<fields.length;i++){
-		let pagestart=multifile(meta.name,meta.fields[i],"idx",meta.outdir,postingss[i]);
-		idxstarts.push(pagestart);
-		postingss[i]=null; //release some memory
-
-		let obj={name:meta.name,field:meta.fields[i],wordcount:wordcounts[i],type:"token"};
-		str=packstr(obj,tokenss[i]);
-		outfn=meta.outdir+meta.name+"."+meta.fields[i]+".token.js";
-		if (verbose) console.log("writing tokens",outfn,"length",str.length);
-		if (writetodisk) fs.writeFileSync( outfn , str,"utf8");
-
-		obj={name:meta.name,field:meta.fields[i],type:"doclen"};
-		str=packstr(obj,pack3(doclens[i]));
-		outfn=meta.outdir+meta.name+"."+meta.fields[i]+".doclen.js";
-		if (verbose) console.log("write doclen,length",str.length);
-		if (writetodisk) fs.writeFileSync(outfn, str ,"utf8" );
 	}
 
 	let txtdeflated=true;
+	if (meta.textonly) txtdeflated=false
 	let beforesize=0,aftersize=0;
 	if (txtdeflated) {
 		if (verbose) console.log("compressing text");
@@ -160,18 +166,30 @@ const build=(meta,raw)=>{
 
 
 	outfn=meta.outdir+meta.name+".js";
-	let segids=packsegmentid(keys);
+	
 
-	var dbobj={ name:meta.name,fields:meta.fields,date:(new Date).toISOString()};
+	let dbobj={ name:meta.name,fields:meta.fields,date:(new Date).toISOString()};
+	let outstr,segids;
 	if (txtdeflated) dbobj.txtdeflated=true;
 	dbobj.txtstarts=txtstarts;
-	dbobj.idxstarts=idxstarts;
+	if (meta.continuouspage) {
+		dbobj.continuouspage=true;
+		segids=packcontinuouspage(keys);
+	} else {
+		segids=packsegmentid(keys);
+	}
+	
+
+	if (!meta.textonly) dbobj.idxstarts=idxstarts;
+	if (meta.textonly) dbobj.textonly=true;
+	if (meta.withtoc) dbobj.withtoc=true;
+	if (meta.withnote) dbobj.withnote=true;
 	dbobj.txtlengths=txtlengths; // for calculating average line of txt
 	dbobj.blurb=blurb;
 
-
-	str= packstr(dbobj,segids);
-	if (verbose) console.log("write main file,length",str.length);
-	if (writetodisk) fs.writeFileSync(outfn, str ,"utf8" );
+	outstr= packpayload(dbobj,segids);
+	
+	if (verbose) console.log("write main file,length",outstr.length);
+	if (writetodisk) fs.writeFileSync(outfn, outstr ,"utf8" );
 }
-module.exports={build}
+module.exports={build,packpayload}

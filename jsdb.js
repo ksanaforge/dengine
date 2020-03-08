@@ -47,6 +47,10 @@ const open=(name,cb)=>{
 
 var tokenTimer=0,tokentrycount=0;
 const loadTokens=(db,cb)=>{ 
+	if (!db.searchable()) {
+		cb(db);
+		return;
+	}
 	if (db.issearchready()){
 		cb(db)
 		return;
@@ -75,7 +79,13 @@ const loadTokens=(db,cb)=>{
 
 	loadscript(files);
 }
+const loadToc=db=>{
+	if (db.withtoc()) loadscript(db.basedir+".toc.js");
+}
 
+const loadNote=db=>{
+	if (db.withnote()) loadscript(db.basedir+".note.js");
+}
 const openSearchable=(name,field,cb)=>{
 	open(name,db=>{
 		if (typeof field=="function"){
@@ -85,6 +95,7 @@ const openSearchable=(name,field,cb)=>{
 		if (db.issearchready(field)){
 			cb(db);
 		} else {
+			loadToc(db);
 			loadTokens(db,cb);
 		}
 	});
@@ -141,7 +152,7 @@ const readpage=(dbname,opts,cb)=>{
 		readtrycount=0;
 		const files=db.filesFromSeq( idseqarr[1] );
 		const idarr=idseqarr[0];
-
+		
 		readTimer=setInterval(()=>{
 			if (db.istextready(idarr)){
 				clearInterval(readTimer);
@@ -262,7 +273,7 @@ var search=(dbname,field,tokens,opts,cb)=>{
 		cb(ranking(db,field,tokenpostings,opts),db);
 	})
 }
-const shorthand={vi:"pm-pvr",ni:'dn-mil',ab:'ds-patthana',
+const shorthand={vi:"pm-pvr",ni:'dn-mil',ab:'ds-kv',
 vb:"pj-as",ivb:"ipj-ias",kn:"kp-mil"}
 const expandnipata=(nipata)=>{
 	return shorthand[nipata]?shorthand[nipata]:nipata;
