@@ -14,7 +14,6 @@ const Db=function(_d){
 	const indexes={};
 	const doclens={};
 	const toc={};
-	const notes={};
 	const tokenss={};
 	const postingss={};
 	const freqtokens={};
@@ -80,8 +79,16 @@ const Db=function(_d){
 	}
 	//return entire page, last line of previous page, first line of next page
 	const getneighbour_cont=(prefix,opts)=>{
-		const {bookname,bk,pg} = parsepagenum(prefix);
+		let {bookname,bk,pg} = parsepagenum(prefix);
+		if (!bookname) bookname=booknames[0];
 		const idarr=[],seqarr=[];
+		const pcount=getbookpagecount(bookname) //extra ending page
+
+		if (opts.plusminus){
+			pg+=parseInt(opts.plusminus);
+			if (pg<1)pg=1;
+			if (pg>pcount)pg=pcount;
+		}
 		
 		let seq=id2seq_cont(bookname+SEGSEP+pg);
 
@@ -96,7 +103,7 @@ const Db=function(_d){
 			seqarr.push(seq);
 			seq++;
 		}
-		const pcount=getbookpagecount(bookname) //extra ending page
+		
 		if (pg<pcount) {
 			idarr.push(bookname+SEGSEP+(pg+1)+LEVELSEP+"1");
 			seqarr.push(seq);
@@ -295,7 +302,7 @@ const Db=function(_d){
 		});
 		return out;
 	}
-
+	const {buildToc}=require("./toc");
 	const setdata=(meta,payload)=>{
 		if (meta.type=="txt"){
 			settexts(meta,payload);
@@ -308,9 +315,7 @@ const Db=function(_d){
 		} else if (meta.type=="doclen"){
 			doclens[meta.field]=unpack3(payload);
 		} else if (meta.type=="toc"){
-			toc[meta.field]=payload.split(/\r?\n/);
-		} else if (meta.type=="notes"){
-			notes[meta.field]=payload.split(/\r?\n/);
+			toc[meta.field]=buildToc(payload.split(/\r?\n/));
 		}
 	}
 	const settexts=(meta,text)=>{
@@ -495,9 +500,10 @@ const Db=function(_d){
 	
 	const searchable=()=>!db.textonly;
 	const getdoclen=(field,docid)=>doclens[field][docid];
-	const gettokens=(field)=>tokenss[field];
+	const gettokens=(field)=>fields?tokenss[field]:tokenss[ db.fields[0]];
 	const getfields=()=>db.fields;
 	const withtoc=()=>db.withtoc;
+	const gettoc=field=>field?toc[field]:toc[db.fields[0]];
 	const withnote=()=>db.withnote;
 	const findbook=prefix=>{
 		if (booksentences[prefix]){
@@ -535,7 +541,7 @@ const Db=function(_d){
 		fetch,setdata,basedir,id2seq,seq2id,getneighbour,tokenseq,
 		findtokens,getpostings,getdoclen,gettokens,findbook,fieldseq,
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
-		withtoc,withnote
+		withtoc,withnote,gettoc
 	}
 }
 module.exports=Db;

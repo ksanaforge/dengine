@@ -3,6 +3,7 @@ const {buildindex}=require("./indexer");
 const {parseTofind}=require("./search");
 const {createpages}=require("./paging");
 const {build,packpayload}=require("./builder");
+const {getTocChildren,buildToc}=require("./toc");
 
 const {tokenize,TOKEN_REGEX}=require("./tokenizer");
 const {open,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
@@ -16,7 +17,8 @@ const API={
 	packintarr:require("./packintarr"),
 	fetchpostings,getbookrange,tokenize,
 	concordance,getshorthand,
-	setlogger,packpayload
+	setlogger,packpayload,
+	getTocChildren,buildToc
 }
 if (typeof window!=="undefined"){
 	window.Dengine=API;

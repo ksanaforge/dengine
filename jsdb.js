@@ -80,12 +80,9 @@ const loadTokens=(db,cb)=>{
 	loadscript(files);
 }
 const loadToc=db=>{
-	if (db.withtoc()) loadscript(db.basedir+".toc.js");
+	if (db.withtoc() && !db.gettoc()) loadscript(db.basedir+".toc.js");
 }
 
-const loadNote=db=>{
-	if (db.withnote()) loadscript(db.basedir+".note.js");
-}
 const openSearchable=(name,field,cb)=>{
 	open(name,db=>{
 		if (typeof field=="function"){
@@ -95,8 +92,10 @@ const openSearchable=(name,field,cb)=>{
 		if (db.issearchready(field)){
 			cb(db);
 		} else {
-			loadToc(db);
-			loadTokens(db,cb);
+			loadTokens(db,()=>{
+				loadToc(db);
+				setTimeout( ()=>cb(db) ,100);
+			});
 		}
 	});
 }
@@ -148,11 +147,16 @@ const readpage=(dbname,opts,cb)=>{
 			cb(null,db);
 			return;
 		}
-		clearInterval(readTimer);
 		readtrycount=0;
-		const files=db.filesFromSeq( idseqarr[1] );
 		const idarr=idseqarr[0];
+		if (db.istextready(idarr)){
+			cb(db.fetch(idarr),db);
+			return;
+		}
 		
+
+		const files=db.filesFromSeq( idseqarr[1] );
+		clearInterval(readTimer);
 		readTimer=setInterval(()=>{
 			if (db.istextready(idarr)){
 				clearInterval(readTimer);
