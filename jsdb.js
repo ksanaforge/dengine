@@ -82,6 +82,9 @@ const loadTokens=(db,cb)=>{
 const loadToc=db=>{
 	if (db.withtoc() && !db.gettoc()) loadscript(db.basedir+".toc.js");
 }
+const loadXref=db=>{
+	if (db.withxref() && !db.getxref()) loadscript(db.basedir+".xref.js");	
+}
 
 const openSearchable=(name,field,cb)=>{
 	open(name,db=>{
@@ -92,9 +95,12 @@ const openSearchable=(name,field,cb)=>{
 		if (db.issearchready(field)){
 			cb(db);
 		} else {
+			loadToc(db);
+			loadXref(db);
 			loadTokens(db,()=>{
-				loadToc(db);
-				setTimeout( ()=>cb(db) ,100);
+				if (db.withtoc()) { //wait for toc to load
+					setTimeout( ()=>cb(db) ,250);
+				} else cb(db);
 			});
 		}
 	});
@@ -154,7 +160,6 @@ const readpage=(dbname,opts,cb)=>{
 			return;
 		}
 		
-
 		const files=db.filesFromSeq( idseqarr[1] );
 		clearInterval(readTimer);
 		readTimer=setInterval(()=>{
@@ -310,6 +315,6 @@ if (typeof window !=="undefined") {
 	window.jsonp=jsonp;
 }
 module.exports={
-	open,fetchidarr,readpage,findtokens,concordance,
+	open,openSearchable,fetchidarr,readpage,findtokens,concordance,
 	getbookrange,fetchpostings,search,setlogger,getshorthand
 }

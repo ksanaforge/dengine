@@ -57,7 +57,7 @@ const parsesegmentid= id=>{
 
 	var at=id.indexOf(SEGSEP);
 	if (hotfix[id]) {
-		debugger
+		//debugger
 		id=hotfix[id];
 		at=id.indexOf(SEGSEP);
 	}

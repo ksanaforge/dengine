@@ -3,6 +3,9 @@ const {unpack3}=require("./packintarr");
 const bsearch=require("./bsearch");
 const {SEGSEP,LANGSEP,LEVELSEP,BOOKNAME_REGEXP}=require("./segment");
 const {commontokens,inflate}=require("./textcompress");
+const {setupToc}=require("./toc");
+const {setupXref,xrefofpage}=require("./xref");
+
 const Db=function(_d){
 	const db=Object.assign({},_d);
 	const basedir=db.name+"/"+db.name;
@@ -14,6 +17,7 @@ const Db=function(_d){
 	const indexes={};
 	const doclens={};
 	const toc={};
+	const xrefs={};
 	const tokenss={};
 	const postingss={};
 	const freqtokens={};
@@ -302,7 +306,6 @@ const Db=function(_d){
 		});
 		return out;
 	}
-	const {buildToc}=require("./toc");
 	const setdata=(meta,payload)=>{
 		if (meta.type=="txt"){
 			settexts(meta,payload);
@@ -315,7 +318,10 @@ const Db=function(_d){
 		} else if (meta.type=="doclen"){
 			doclens[meta.field]=unpack3(payload);
 		} else if (meta.type=="toc"){
-			toc[meta.field]=buildToc(payload.split(/\r?\n/));
+			toc[meta.field]=setupToc(payload.split(/\r?\n/));
+		} else if (meta.type=="xref"){
+			xrefs[meta.target]=true;
+			setupXref(meta,payload.split(/\r?\n/));
 		}
 	}
 	const settexts=(meta,text)=>{
@@ -503,8 +509,17 @@ const Db=function(_d){
 	const gettokens=(field)=>fields?tokenss[field]:tokenss[ db.fields[0]];
 	const getfields=()=>db.fields;
 	const withtoc=()=>db.withtoc;
-	const gettoc=field=>field?toc[field]:toc[db.fields[0]];
 	const withnote=()=>db.withnote;
+	const withxref=()=>db.withxref;
+	const gettoc=field=>field?toc[field]:toc[db.fields[0]];
+	const getxref=field=>field?xrefs[field]:xrefs[db.fields[0]];
+	
+	const getDate=()=>db.date;
+
+	const getxrefofpage=(sid)=>{
+		return xrefofpage(db.name,sid);
+	}
+	
 	const findbook=prefix=>{
 		if (booksentences[prefix]){
 			const n=booknames.indexOf(prefix);
@@ -541,7 +556,7 @@ const Db=function(_d){
 		fetch,setdata,basedir,id2seq,seq2id,getneighbour,tokenseq,
 		findtokens,getpostings,getdoclen,gettokens,findbook,fieldseq,
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
-		withtoc,withnote,gettoc
+		withtoc,withnote,withxref,gettoc,getxref,getDate,getxrefofpage
 	}
 }
 module.exports=Db;

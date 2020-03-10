@@ -4,6 +4,7 @@ const {createpages}=require("./paging");
 const {pack3}=require("./packintarr");
 const {SPLITTER}=require("./tokenizer");
 const {commontokens,deflate}=require("./textcompress");
+const {buildXref}=require("./xref");
 const {packsegmentid,packcontinuouspage,LANGSEP}=require("./segment");
 const fs=require("fs");
 const verbose=true;
@@ -192,4 +193,11 @@ const build=(meta,raw)=>{
 	if (verbose) console.log("write main file,length",outstr.length);
 	if (writetodisk) fs.writeFileSync(outfn, outstr ,"utf8" );
 }
-module.exports={build,packpayload}
+
+const writeExtra=(outfn,meta,arr)=>{
+	meta.date=(new Date).toISOString();
+	let outstr=packpayload(meta,arr);
+	if (writetodisk) fs.writeFileSync( outfn ,outstr,"utf8" );
+}
+
+module.exports={build,packpayload,writeExtra}

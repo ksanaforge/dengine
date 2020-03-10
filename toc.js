@@ -1,4 +1,4 @@
-const buildToc = rawtoc=> {
+const setupToc = rawtoc=> {
 	const toc=[];
 	for (let i=0;i<rawtoc.length;i++){
 		const at=rawtoc[i].indexOf(",");
@@ -41,4 +41,4 @@ const getTocChildren = (toc,n)=> {
 	}
 	return out;
 }
-module.exports={buildToc,getTocChildren};
+module.exports={setupToc,getTocChildren};
