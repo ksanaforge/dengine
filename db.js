@@ -93,23 +93,28 @@ const Db=function(_d){
 			if (pg<1)pg=1;
 			if (pg>pcount)pg=pcount;
 		}
-		
+
 		let seq=id2seq_cont(bookname+SEGSEP+pg);
 
-		if (pg>1) {
+		if (pg>1) { //last line of previous page
 			const lcount=getbookpagelinecount(bookname,pg-1);
 			idarr.push(bookname+SEGSEP+(pg-1)+LEVELSEP+lcount);
 			seqarr.push(seq-1);
 		}
-		const linecount=getbookpagelinecount(bookname,pg);
-		for (let i=1;i<linecount+1;i++){
-			idarr.push(bookname+SEGSEP+pg+LEVELSEP+i);
-			seqarr.push(seq);
-			seq++;
+
+		const pagecount=opts.pagecount||1;
+
+		for (let j=pg;j<pg+pagecount;j++) {
+			const linecount=getbookpagelinecount(bookname,j);
+			for (let i=1;i<linecount+1;i++){
+				idarr.push(bookname+SEGSEP+j+LEVELSEP+i);
+				seqarr.push(seq);
+				seq++;
+			}
 		}
-		
-		if (pg<pcount) {
-			idarr.push(bookname+SEGSEP+(pg+1)+LEVELSEP+"1");
+
+		if ((pg+pagecount-1)<pcount) {
+			idarr.push(bookname+SEGSEP+(pg+pagecount)+LEVELSEP+"1");
 			seqarr.push(seq);
 		}
 		return [idarr,seqarr];
