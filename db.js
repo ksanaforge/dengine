@@ -25,7 +25,7 @@ const Db=function(_d){
 
 
 	const issearchready=f=>{
-		if (!db.textonly)return false;
+		if (db.textonly)return false;
 		let fields=f;
 		if (!Array.isArray(fields)) fields=[f];
 		for (var f of fields){
@@ -511,7 +511,7 @@ const Db=function(_d){
 	
 	const searchable=()=>!db.textonly;
 	const getdoclen=(field,docid)=>doclens[field][docid];
-	const gettokens=(field)=>fields?tokenss[field]:tokenss[ db.fields[0]];
+	const gettokens=(field)=>field?tokenss[field]:tokenss[ db.fields[0]];
 	const getfields=()=>db.fields;
 	const withtoc=()=>db.withtoc;
 	const withnote=()=>db.withnote;

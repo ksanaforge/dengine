@@ -3,7 +3,7 @@ const Db=require("./db");
 const {concordancesearch}=require("./concordance");
 let log=()=>{console.log.call(arguments)};
 let dbpool={};
-let verbose=false;
+let verbose=true;
 const loadscript=(files)=>{
 	let f=files;
 	if (typeof files=="string") f=[files];

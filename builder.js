@@ -82,7 +82,7 @@ const build=(meta,raw)=>{
 			txtlengths[j]+=content[j].length;
 		}
 	}
-	let outfn='';
+	let outfn='',idxstarts=[];;
 	if (!meta.textonly) {
 		for (j=0;j<fields.length;j++){
 			const {inverted,doclen,wordcount}=buildindex(fields[j],{termfreq:true});
@@ -101,7 +101,7 @@ const build=(meta,raw)=>{
 
 
 
-		let str="",idxstarts=[];
+		let str="";
 		for (var i=0;i<fields.length;i++){
 			let pagestart=multifile(meta.name,meta.fields[i],"idx",meta.outdir,postingss[i]);
 			idxstarts.push(pagestart);
