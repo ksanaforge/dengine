@@ -522,7 +522,13 @@ const Db=function(_d){
 	const getDate=()=>db.date;
 
 	const getxrefofpage=(sid)=>{
-		return xrefofpage(db.name,sid);
+		if (Array.isArray(sid)) {
+			let out={};
+			sid.map( item=> Object.assign(out,xrefofpage(db.name,item)));
+			return out;
+		} else {
+			return xrefofpage(db.name,sid);
+		}
 	}
 
 	const getfromxref=(targetdb,vol,pagenum)=>{
