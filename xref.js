@@ -5,6 +5,7 @@ const xrefs={};
 const setupXref=(meta,rawjs)=>{
 	const out={};
 	let sources=[],targets=[];
+	let sources2=[],targets2=[];
 	let lastbkname='',bkname='',pagenum='',lasttargetbkname='';
 	let targetbkname='',targetpagenum=0;
 	for (var i=0;i<rawjs.length;i++){
@@ -44,9 +45,11 @@ const setupXref=(meta,rawjs)=>{
 			}			
 		}
 
-
 		sources.push(pagenum);
 		targets.push(targetbkname+SEGSEP+targetpagenum);
+
+		sources2.push([bkname,pagenum]);
+		targets2.push([targetbkname,targetpagenum]);
 	}
 
 	out[lastbkname]=[sources,targets];
@@ -54,8 +57,37 @@ const setupXref=(meta,rawjs)=>{
 	//console.log(xrefofpage('16:2',out))//  map to 15:2
 	if (!xrefs[meta.name]) xrefs[meta.name]={};
 	xrefs[meta.name][meta.target]=out;
+	
+	//build reverse index
+	if (!xrefs[meta.target]) xrefs[meta.target]={};
+	xrefs[meta.target][meta.name]=reversexref(sources2,targets2);
 }
+const reversexref=(sources2,targets2)=>{
+	let out=[],sources=[],targets=[];
+	let last_targetbkname='';
+	
+	for (let i=0;i<targets2.length;i++) {
+		let tbk=targets2[i][0];
+		if (tbk!==last_targetbkname) {
+			if (last_targetbkname){
+				out[last_targetbkname]=targets;
+				targets=[];				
+			}
+			last_targetbkname=targets2[i][0];
+		}
+		targets[targets2[i][1]]=sources2[i][0]+SEGSEP+sources2[i][1];
+	}
 
+	out[last_targetbkname]=targets;
+	return out;
+}
+const fromxref=(dbname,targetdb,vol,pagenum)=>{
+	if (!xrefs[targetdb] || !xrefs[targetdb][dbname]) return null;
+	
+	const mapping=xrefs[targetdb][dbname];
+	if (!mapping[vol]) return null;
+	return mapping[vol][pagenum];
+}
 const xrefofpage=(dbname,sid)=>{
 	const allxref=xrefs[dbname];
 	const out={};
@@ -84,4 +116,4 @@ const xrefofpage=(dbname,sid)=>{
 	return out;
 }
 
-module.exports={setupXref,xrefofpage}
+module.exports={setupXref,xrefofpage,fromxref}

@@ -4,7 +4,7 @@ const bsearch=require("./bsearch");
 const {SEGSEP,LANGSEP,LEVELSEP,BOOKNAME_REGEXP}=require("./segment");
 const {commontokens,inflate}=require("./textcompress");
 const {setupToc}=require("./toc");
-const {setupXref,xrefofpage}=require("./xref");
+const {setupXref,xrefofpage,fromxref}=require("./xref");
 
 const Db=function(_d){
 	const db=Object.assign({},_d);
@@ -524,6 +524,10 @@ const Db=function(_d){
 	const getxrefofpage=(sid)=>{
 		return xrefofpage(db.name,sid);
 	}
+
+	const getfromxref=(targetdb,vol,pagenum)=>{
+		return fromxref(db.name,targetdb,vol,pagenum);
+	}
 	
 	const findbook=prefix=>{
 		if (booksentences[prefix]){
@@ -561,7 +565,8 @@ const Db=function(_d){
 		fetch,setdata,basedir,id2seq,seq2id,getneighbour,tokenseq,
 		findtokens,getpostings,getdoclen,gettokens,findbook,fieldseq,
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
-		withtoc,withnote,withxref,gettoc,getxref,getDate,getxrefofpage
+		withtoc,withnote,withxref,gettoc,getxref,getDate,
+		getxrefofpage,getfromxref
 	}
 }
 module.exports=Db;
