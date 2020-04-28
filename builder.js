@@ -4,7 +4,6 @@ const {createpages}=require("./paging");
 const {pack3}=require("./packintarr");
 const {SPLITTER}=require("./tokenizer");
 const {commontokens,deflate}=require("./textcompress");
-const {buildXref}=require("./xref");
 const {packsegmentid,packcontinuouspage,LANGSEP}=require("./segment");
 const fs=require("fs");
 const verbose=true;
@@ -185,6 +184,7 @@ const build=(meta,raw)=>{
 	if (meta.textonly) dbobj.textonly=true;
 	if (meta.withtoc) dbobj.withtoc=true;
 	if (meta.withnote) dbobj.withnote=true;
+	if (meta.withxref) dbobj.withxref=true;
 	dbobj.txtlengths=txtlengths; // for calculating average line of txt
 	dbobj.blurb=blurb;
 
