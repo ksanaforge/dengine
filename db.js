@@ -76,9 +76,13 @@ const Db=function(_d){
 	}
 
 	const getbookpagelinecount=(book,pagenum)=>{
-		return booksentences[book][pagenum]-booksentences[book][pagenum-1];
+		return Array.isArray(booksentences[book])?
+			booksentences[book][pagenum]-booksentences[book][pagenum-1]:1;
 	}
 	const getbookpagecount=(book)=>{
+		if (!Array.isArray(booksentences[book])) {
+			return 1; //one line per page
+		}
 		return booksentences[book].length - 1;
 	}
 	//return entire page, last line of previous page, first line of next page
@@ -183,8 +187,11 @@ const Db=function(_d){
 	const id2seq_cont=id=>{
 		const {bookname,pg,ln} = parsepagenum(id);
 		if (isNaN(pg))return -1;
-		if (!booksentences[bookname])return -1;
-		return booksentences[bookname][pg-1]+(ln-1);
+
+		const arr=booksentences[bookname];
+		if (typeof arr=="undefined")return -1;
+		return Array.isArray(arr)?booksentences[bookname][pg-1]+(ln-1)
+		:(arr+pg-1);//one line per page
 	}
 	const id2seq=id=>{ //seq starts from 1, 0 ==not found
 		if (db.continuouspage) return id2seq_cont(id);

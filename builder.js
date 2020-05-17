@@ -186,7 +186,8 @@ const build=(meta,raw)=>{
 	if (meta.withnote) dbobj.withnote=true;
 	if (meta.withxref) dbobj.withxref=true;
 	dbobj.txtlengths=txtlengths; // for calculating average line of txt
-	dbobj.blurb=blurb;
+	if (Object.keys(blurb)) dbobj.blurb=blurb;
+	if (meta.aux) dbobj.aux=meta.aux;
 
 	outstr= packpayload(dbobj,segids);
 	

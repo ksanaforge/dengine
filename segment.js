@@ -121,6 +121,16 @@ const packsegmentid=idarr=>{
 	}
 	return out;
 }
+const packlinepage=pagelines=>{ //each page only has one line
+	let onelinepage=true;
+	for (var i=1;i<pagelines.length;i++) {
+		if (pagelines[i]!==pagelines[i-1]+1) {
+			onelinepage=false;
+			break;
+		}
+	}
+	return onelinepage?pagelines[0]:"["+pagelines.join()+"]";
+}
 const packcontinuouspage=idarr=>{
 	var prev=''
 	let out=[],pageline=0,pagelines=[];
@@ -131,7 +141,7 @@ const packcontinuouspage=idarr=>{
 	
 		if (lastbk!==bk && lastbk) {
 			pagelines.push(pageline);//for last page
-			out.push(lastbk+SEGSEP+"["+pagelines.join()+"]");
+			out.push(lastbk+SEGSEP+packlinepage(pagelines));
 			pagelines=[];
 		}
 
@@ -144,7 +154,9 @@ const packcontinuouspage=idarr=>{
 		lastbk=bk;
 	}
 	pagelines.push(pageline);//for last page
-	out.push(lastbk+SEGSEP+"["+pagelines.join()+"]");
+	
+
+	out.push(lastbk+SEGSEP+packlinepage(pagelines));
 	return out;
 }
 
