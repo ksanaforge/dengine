@@ -523,6 +523,7 @@ const Db=function(_d){
 	const withtoc=()=>db.withtoc;
 	const withnote=()=>db.withnote;
 	const withxref=()=>db.withxref;
+	const getaux=()=>db.aux;
 	const gettoc=field=>field?toc[field]:toc[db.fields[0]];
 	const getxref=field=>field?xrefs[field]:xrefs[db.fields[0]];
 	
@@ -579,7 +580,7 @@ const Db=function(_d){
 		findtokens,getpostings,getdoclen,gettokens,findbook,fieldseq,
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
 		withtoc,withnote,withxref,gettoc,getxref,getDate,
-		getxrefofpage,getfromxref
+		getxrefofpage,getfromxref,getaux
 	}
 }
 module.exports=Db;

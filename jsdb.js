@@ -148,6 +148,12 @@ const fetchpostings=(dbname,field,tokens,cb)=>{
 var readTimer=0,readtrycount=0;
 const readpage=(dbname,opts,cb)=>{
 	openSearchable(dbname,db=>{
+		let prefix=opts.prefix;
+		if (opts.parseId) {
+			opts=opts.parseId(db,opts)
+		};
+		
+
 		let idseqarr=db.getneighbour(opts.prefix,opts);
 		if (!idseqarr) {
 			cb(null,db);
