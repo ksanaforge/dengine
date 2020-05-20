@@ -100,7 +100,7 @@ const Db=function(_d){
 
 		let seq=id2seq_cont(bookname+SEGSEP+pg);
 
-		if (pg>1) { //last line of previous page
+		if (pg>1 && !opts.parseId) { //last line of previous page
 			const lcount=getbookpagelinecount(bookname,pg-1);
 			idarr.push(bookname+SEGSEP+(pg-1)+LEVELSEP+lcount);
 			seqarr.push(seq-1);

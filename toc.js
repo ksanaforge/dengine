@@ -3,7 +3,8 @@ const setupToc = rawtoc=> {
 	for (let i=0;i<rawtoc.length;i++){
 		const at=rawtoc[i].indexOf(",");
 		const l=rawtoc[i].substr(0,at);
-		const t=rawtoc[i].substr(at+2);
+		let t=rawtoc[i].substr(at+2);
+		if (t[0]=="|") t=t.substr(1);
 		const d=parseInt('0x'+rawtoc[i].substr(at+1,1));
 		toc.push({ d,t,l } );
 	}
