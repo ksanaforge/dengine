@@ -9,6 +9,7 @@ const {tokenize,TOKEN_REGEX}=require("./tokenizer");
 const {open,openSearchable,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
 	getshorthand,getbookrange,search,concordance,setlogger}=require("./jsdb");
 
+const {openSync}=require("./nodedb");
 
 const API={
 	comparesegment,parsesegmentid,LANGSEP,SEGSEP,TOKEN_REGEX,LEVELSEP,
@@ -19,7 +20,10 @@ const API={
 	fetchpostings,getbookrange,tokenize,
 	concordance,getshorthand,
 	setlogger,packpayload,
-	getTocChildren,buildToc
+	getTocChildren,buildToc,
+
+//for node only
+	openSync
 }
 if (typeof window!=="undefined"){
 	window.Dengine=API;

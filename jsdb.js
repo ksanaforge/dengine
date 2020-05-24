@@ -3,7 +3,7 @@ const Db=require("./db");
 const {concordancesearch}=require("./concordance");
 let log=()=>{console.log.call(arguments)};
 let dbpool={};
-let verbose=true;
+let verbose=false;
 const loadscript=(files)=>{
 	let f=files;
 	if (typeof files=="string") f=[files];
@@ -12,6 +12,9 @@ const loadscript=(files)=>{
 		script.setAttribute("src", file);
 		document.getElementsByTagName("body")[0].appendChild(script);		
 	});	
+}
+const getdbfrompool=dbname=>{
+	return dbpool[dbname];
 }
 const jsonp=(data)=>{
 	if (data.meta && data.meta.name){
@@ -322,5 +325,6 @@ if (typeof window !=="undefined") {
 }
 module.exports={
 	open,openSearchable,fetchidarr,readpage,findtokens,concordance,
-	getbookrange,fetchpostings,search,setlogger,getshorthand
+	getbookrange,fetchpostings,search,setlogger,getshorthand,
+	jsonp,getdbfrompool
 }

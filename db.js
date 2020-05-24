@@ -300,7 +300,7 @@ const Db=function(_d){
 		});
 		return Object.keys(files);
 	}
-	const fetch=(idarr)=>{
+	const fetch=idarr=>{
 		const out=[];
 		forEachId(idarr,(id,seq)=>{
 			let content=txts[seq].split(LANGSEP);
