@@ -48,7 +48,7 @@ const hotfix={
  //  "bi-sk1:75:0.2":"bi-sk75:0.1",
  // "bi-sk1:75:0.1":"bi-sk75:0.1"   need to fix files, cannot hotfix
 }
-const BOOKNAME_REGEXP=/([a-z\-\.]+)(\d*)/
+const BOOKNAME_REGEXP=/^([a-z\-\.]+)(\d*)$/
 const SEGSEP=":";
 const LEVELSEP=".";
 const LANGSEP="|||"
@@ -62,7 +62,7 @@ const parsesegmentid= id=>{
 		at=id.indexOf(SEGSEP);
 	}
 
-	if (at==-1)	return [id,0,0,0,0,0];
+	if (at==-1)	return [id,'',0,0,0,0];
 
 	const fn=id.substr(0,at);
 	const para=id.substr(at+1);
@@ -71,20 +71,19 @@ const parsesegmentid= id=>{
 
 	let m=ch[0].match(BOOKNAME_REGEXP);
 	if (!m) {
-		obj[0]=''; //no ascii prefix
-		obj[1]=ch[0];
+		obj[0]=ch[0]; //no ascii prefix
+		obj[1]='';
 	} else {
 		obj[0]=m[1];
-		obj[1]=m[2];		
+		obj[1]=m[2];
 	}
-
 	obj[2]=ch[1];
 	obj[3]=ch[2];//abhidhamma ds2.1.1:0.1
 	for (var i=0;i<pr.length;i++){
 		obj[i+4]=pr[i];
 	}
-	for (var i=1;i<obj.length;i++) {
-		const int=parseInt(obj[i]);
+	for (var i=2;i<obj.length;i++) { //2020.5.25, check from 3rd item
+		const int=parseInt(obj[i]);  //for csmat
 		obj[i]=isNaN(int)?0:int;
 	}
 	return obj;
@@ -138,7 +137,7 @@ const packcontinuouspage=idarr=>{
 	for (let id of idarr){
 		let idobj=parsesegmentid(id);
 		let bk=idobj[0]+idobj[1],page=idobj[4],sentenceid=idobj[5];
-	
+		
 		if (lastbk!==bk && lastbk) {
 			pagelines.push(pageline);//for last page
 			out.push(lastbk+SEGSEP+packlinepage(pagelines));
@@ -155,8 +154,8 @@ const packcontinuouspage=idarr=>{
 	}
 	pagelines.push(pageline);//for last page
 	
-
 	out.push(lastbk+SEGSEP+packlinepage(pagelines));
+
 	return out;
 }
 

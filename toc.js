@@ -51,8 +51,8 @@ const setupToc = (rawtoc)=> {
 	return toc;
 }
 
-const closestItem=(toc,tocitems,vpl)=> {
-	const v=vplval(vpl)+5;//10 more line, to show deeper toc
+const closestItem=(toc,tocitems,vpl,adv=0)=> {
+	const v=vplval(vpl)+adv;//10 more line, to show deeper toc
 	for (let i=1;i<tocitems.length;i++) {
 		const tv=vplval(toc[tocitems[i]].l);
 		if (tv>v) return i-1;

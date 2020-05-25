@@ -9,6 +9,7 @@ const fs=require("fs");
 const verbose=true;
 const writetodisk=true;
 const blurb={};
+const SIDSEP=",";
 const packpayload=(meta,arr_str)=>{
 	var payload=arr_str;
 	if (Array.isArray(arr_str)){
@@ -47,6 +48,7 @@ const build=(meta,raw)=>{
 	let txt=[];
 	let keycheck={};
 	let txtlengths=[];
+	let key_bk='';
 	for (var j=0;j<meta.fields.length;j++){
 		fields.push([]);
 		txtlengths.push(0);
@@ -60,9 +62,16 @@ const build=(meta,raw)=>{
 		if (!key) {
 			console.log("empty key ",line,i);
 		}
-		if (key.indexOf(":")==-1) {//blurb
+		const at2=key.indexOf(":");
+		if (at2==-1) {//blurb
 			blurb[key]=line.substr(at+1).replace(LANGSEP,"");
 			continue;	
+		}
+
+		if (key[0]!==":") {
+			key_bk=key.substr(0,at2);
+		} else {
+			key=key_bk+key;
 		}
 
 		if (!keycheck[key]) {
@@ -179,7 +188,6 @@ const build=(meta,raw)=>{
 		segids=packsegmentid(keys);
 	}
 	
-
 	if (!meta.textonly) dbobj.idxstarts=idxstarts;
 	if (meta.textonly) dbobj.textonly=true;
 	if (meta.withtoc) dbobj.withtoc=true;

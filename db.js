@@ -542,7 +542,12 @@ const Db=function(_d){
 			return xrefofpage(db.name,sid);
 		}
 	}
-
+	const bookseq2name=n=>{
+		return booknames[n-1];
+	}
+	const bookname2seq=name=>{
+		return booknames.indexOf(name)+1;
+	}
 	const getfromxref=(targetdb,vol,pagenum)=>{
 		return fromxref(db.name,targetdb,vol,pagenum);
 	}
@@ -586,7 +591,8 @@ const Db=function(_d){
 		findtokens,getpostings,getdoclen,gettokens,findbook,fieldseq,
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
 		withtoc,withnote,withxref,gettoc,getxref,getDate,
-		getxrefofpage,getfromxref,getaux,gettocancestor
+		getxrefofpage,getfromxref,getaux,gettocancestor,
+		bookseq2name,bookname2seq
 	}
 }
 module.exports=Db;
