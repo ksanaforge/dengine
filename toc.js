@@ -1,4 +1,29 @@
-const setupToc = rawtoc=> {
+/*
+const tocNodeParser=lnk=>{
+	const bookseq=parseInt(lnk);
+	const at=lnk.indexOf(":");
+	const paranum=parseInt(lnk.substr(at+1));
+	return bookseq*65536 + bookseq;
+}
+
+*/
+const MAXLINE=256,MAXPAGE=32768;
+const {SEGSEP,LEVELSEP}=require("./segment")
+const vplval=id=>{
+	const p=id.split(SEGSEP);
+	const vol=parseInt(p[0]);
+	const page=parseInt(p[1]);
+	let line=0;
+	if (!p[1])return 0;
+	let at=p[1].indexOf(LEVELSEP)
+	if (at>-1) {
+		line=parseInt(p[1].substr(at+1));
+	}
+
+	return line+page*MAXLINE+vol*MAXPAGE*MAXLINE;
+
+}
+const setupToc = (rawtoc)=> {
 	const toc=[];
 	for (let i=0;i<rawtoc.length;i++){
 		const at=rawtoc[i].indexOf(",");
@@ -25,6 +50,16 @@ const setupToc = rawtoc=> {
 	toc.built=true;
 	return toc;
 }
+
+const closestItem=(toc,tocitems,vpl)=> {
+	const v=vplval(vpl)+5;//10 more line, to show deeper toc
+	for (let i=1;i<tocitems.length;i++) {
+		const tv=vplval(toc[tocitems[i]].l);
+		if (tv>v) return i-1;
+	}
+	return tocitems.length-1;
+}
+
 const getTocChildren = (toc,n)=> {
 	if (!toc[n]||!toc[n+1] ||toc[n+1].d!==toc[n].d+1) return [];
 	var out=[],next=n+1;
@@ -42,4 +77,21 @@ const getTocChildren = (toc,n)=> {
 	}
 	return out;
 }
-module.exports={setupToc,getTocChildren};
+const getTocAncestor=(toc,vpl)=>{
+	let cur=0;
+	const vplv=vplval(vpl); 
+	let children=getTocChildren(toc,cur),nextchildren;
+	const out=[];
+	do {
+		let selected = closestItem(toc,children,vpl) ;
+		cur=children[selected];
+		nextchildren=getTocChildren(toc,cur);
+		if (children.length && out.length==0||vplv>=vplval(toc[cur].l)) {
+			out.push([toc[ cur].t,toc[cur].l])
+		}
+		if (!nextchildren.length) break;
+		children=nextchildren;
+	} while (true);
+	return out;
+}
+module.exports={setupToc,getTocChildren,getTocAncestor,closestItem,vplval};

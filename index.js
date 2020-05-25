@@ -7,9 +7,8 @@ const {getTocChildren,buildToc}=require("./toc");
 
 const {tokenize,TOKEN_REGEX}=require("./tokenizer");
 const {open,openSearchable,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
-	getshorthand,getbookrange,search,concordance,setlogger}=require("./jsdb");
-
-const {openSync}=require("./nodedb");
+	getshorthand,getbookrange,search,concordance,setlogger
+,openSync}=require("./jsdb");
 
 const API={
 	comparesegment,parsesegmentid,LANGSEP,SEGSEP,TOKEN_REGEX,LEVELSEP,

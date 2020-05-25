@@ -1,10 +1,13 @@
 'use strict';
+let fs=null,loadscript;
+
 const Db=require("./db");
 const {concordancesearch}=require("./concordance");
 let log=()=>{console.log.call(arguments)};
 let dbpool={};
 let verbose=false;
-const loadscript=(files)=>{
+
+const loadscriptAsync=(files)=>{
 	let f=files;
 	if (typeof files=="string") f=[files];
 	f.forEach(file=>{
@@ -13,8 +16,18 @@ const loadscript=(files)=>{
 		document.getElementsByTagName("body")[0].appendChild(script);		
 	});	
 }
-const getdbfrompool=dbname=>{
-	return dbpool[dbname];
+const loadscriptSync=files=>{
+	if (!Array.isArray(files)) files=[files];
+	files.forEach(file=>{
+		const content=fs.readFileSync(file,"utf8");
+		eval(content);
+	})
+}
+if (typeof window=="undefined"){
+	fs=require("fs");
+	loadscript=loadscriptSync;
+} else {
+	loadscript=loadscriptAsync;
 }
 const jsonp=(data)=>{
 	if (data.meta && data.meta.name){
@@ -47,7 +60,42 @@ const open=(name,cb)=>{
 		opentrycount++;
 	},50);
 }
+const loadsearchable=function(db){
+	const fields=db.getfields();
+	const files=[];
+	for (let field of fields){
+		if (!db.gettokens(field)){
+			const fn=db.basedir+"."+field+".token.js";
+			if (fs.existsSync(fn))files.push(fn);
+		}
+	}
+	loadscript(files);
+}
 
+
+const fetchSync=function(idarr){
+	const db=this;
+	if (!db.istextready(idarr)){
+		db.filesFromId(idarr).forEach(file=>loadscript(file));
+	}
+	return this.fetch(idarr);
+}
+
+const openSync=(name,opts)=>{
+	if (typeof opts=="undefined") opts={};
+	loadscript(name+"/"+name+".js");
+	const db= dbpool[name];
+	if (!db)return null;
+
+	if (!opts.textonly) {
+		loadsearchable(db);
+	}
+	if (db.withtoc() && !db.gettoc()) loadscript(db.basedir+".toc.js");
+	if (db.withxref() && !db.getxref()) loadscript(db.basedir+".xref.js");
+
+	db.fetchSync=fetchSync.bind(db);
+	return db;
+}
 var tokenTimer=0,tokentrycount=0;
 const loadTokens=(db,cb)=>{ 
 	if (!db.searchable()) {
@@ -326,5 +374,6 @@ if (typeof window !=="undefined") {
 module.exports={
 	open,openSearchable,fetchidarr,readpage,findtokens,concordance,
 	getbookrange,fetchpostings,search,setlogger,getshorthand,
-	jsonp,getdbfrompool
+	jsonp,
+	openSync
 }

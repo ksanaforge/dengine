@@ -3,9 +3,9 @@ const {unpack3}=require("./packintarr");
 const bsearch=require("./bsearch");
 const {SEGSEP,LANGSEP,LEVELSEP,BOOKNAME_REGEXP}=require("./segment");
 const {commontokens,inflate}=require("./textcompress");
-const {setupToc}=require("./toc");
+const {setupToc,getTocAncestor}=require("./toc");
 const {setupXref,xrefofpage,fromxref}=require("./xref");
-
+let tocnodeparser=null;
 const Db=function(_d){
 	const db=Object.assign({},_d);
 	const basedir=db.name+"/"+db.name;
@@ -529,6 +529,10 @@ const Db=function(_d){
 	
 	const getDate=()=>db.date;
 
+	const setTocNodeParser=func=>{
+		tocnodeparser=func;
+	}
+
 	const getxrefofpage=(sid)=>{
 		if (Array.isArray(sid)) {
 			let out={};
@@ -542,7 +546,9 @@ const Db=function(_d){
 	const getfromxref=(targetdb,vol,pagenum)=>{
 		return fromxref(db.name,targetdb,vol,pagenum);
 	}
-	
+	const gettocancestor=(sid)=>{
+		return getTocAncestor(gettoc(),sid);
+	}
 	const findbook=prefix=>{
 		if (booksentences[prefix]){
 			const n=booknames.indexOf(prefix);
@@ -580,7 +586,7 @@ const Db=function(_d){
 		findtokens,getpostings,getdoclen,gettokens,findbook,fieldseq,
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
 		withtoc,withnote,withxref,gettoc,getxref,getDate,
-		getxrefofpage,getfromxref,getaux
+		getxrefofpage,getfromxref,getaux,gettocancestor
 	}
 }
 module.exports=Db;
