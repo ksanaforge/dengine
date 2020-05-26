@@ -22,6 +22,7 @@ const Db=function(_d){
 	const postingss={};
 	const freqtokens={};
 	const wordcounts={};
+	const backlinks={};
 
 
 	const issearchready=f=>{
@@ -554,6 +555,26 @@ const Db=function(_d){
 	const gettocancestor=(sid)=>{
 		return getTocAncestor(gettoc(),sid);
 	}
+
+	const addlink=(links,fromdb,regex)=>{
+		//[hyperlink, target_vpl ]
+		const hyperlink_regex=/^(.+?)[:p](\d+)$/
+		for (var i=0;i<links.length;i++){
+			const m=links[i][0].match(hyperlink_regex);
+			const bk=m[1],para=m[2];
+			if (!backlinks[bk]) {
+				backlinks[bk]={};
+			}
+			if (!backlinks[bk][para]) {
+				backlinks[bk][para]={};
+			}
+			if (!backlinks[bk][para][fromdb]){
+				backlinks[bk][para][fromdb]=[];	
+			}
+			backlinks[bk][para][fromdb].push(links[i][1]);
+		}
+ 		//console.log("addlink",backlinks,db.name,targetdb)
+	}
 	const findbook=prefix=>{
 		if (booksentences[prefix]){
 			const n=booknames.indexOf(prefix);
@@ -592,7 +613,7 @@ const Db=function(_d){
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
 		withtoc,withnote,withxref,gettoc,getxref,getDate,
 		getxrefofpage,getfromxref,getaux,gettocancestor,
-		bookseq2name,bookname2seq
+		bookseq2name,bookname2seq,addlink
 	}
 }
 module.exports=Db;

@@ -6,7 +6,7 @@ const {concordancesearch}=require("./concordance");
 let log=()=>{console.log.call(arguments)};
 let dbpool={};
 let verbose=false;
-
+const {buildbacklink}=require("./connect");
 const loadscriptAsync=(files)=>{
 	let f=files;
 	if (typeof files=="string") f=[files];
@@ -29,6 +29,7 @@ if (typeof window=="undefined"){
 } else {
 	loadscript=loadscriptAsync;
 }
+
 const jsonp=(data)=>{
 	if (data.meta && data.meta.name){
 		const name=data.meta.name;
@@ -54,6 +55,7 @@ const open=(name,cb)=>{
 	opendbTimer=setInterval( ()=>{
 		if (dbpool[name]) {
 			clearInterval(opendbTimer);
+			buildbacklink(name,dbpool);
 			cb(dbpool[name]);
 		}
 		if (opentrycount>10) clearInterval(opendbTimer);
@@ -87,6 +89,7 @@ const openSync=(name,opts)=>{
 	const db= dbpool[name];
 	if (!db)return null;
 
+	buildbacklink(name,dbpool);
 	if (!opts.textonly) {
 		loadsearchable(db);
 	}
