@@ -2,6 +2,7 @@ const {comparesegment,parsesegmentid,SEGSEP,LEVELSEP,LANGSEP}=require("./segment
 const {buildindex}=require("./indexer");
 const {parseTofind}=require("./search");
 const {createpages}=require("./paging");
+const bsearch=require("./bsearch")
 const {build,packpayload,writeExtra}=require("./builder");
 const {getTocChildren,buildToc}=require("./toc");
 
@@ -19,7 +20,7 @@ const API={
 	fetchpostings,getbookrange,tokenize,
 	concordance,getshorthand,
 	setlogger,packpayload,
-	getTocChildren,buildToc,getdbbookname,
+	getTocChildren,buildToc,getdbbookname,bsearch,
 
 //for node only
 	openSync
