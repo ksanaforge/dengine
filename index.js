@@ -8,7 +8,7 @@ const {getTocChildren,buildToc}=require("./toc");
 const {tokenize,TOKEN_REGEX}=require("./tokenizer");
 const {open,openSearchable,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
 	getshorthand,getbookrange,search,concordance,setlogger
-,openSync}=require("./jsdb");
+,openSync,getdbbookname}=require("./jsdb");
 
 const API={
 	comparesegment,parsesegmentid,LANGSEP,SEGSEP,TOKEN_REGEX,LEVELSEP,
@@ -19,7 +19,7 @@ const API={
 	fetchpostings,getbookrange,tokenize,
 	concordance,getshorthand,
 	setlogger,packpayload,
-	getTocChildren,buildToc,
+	getTocChildren,buildToc,getdbbookname,
 
 //for node only
 	openSync

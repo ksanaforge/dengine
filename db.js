@@ -573,7 +573,23 @@ const Db=function(_d){
 			}
 			backlinks[bk][para][fromdb].push(links[i][1]);
 		}
- 		//console.log("addlink",backlinks,db.name,targetdb)
+	}
+
+	const getbacklinks=sid=>{
+		const hyperlink_regex=/^(.+?)[:p](\d+)$/
+		const m=sid.match(hyperlink_regex);
+		if (!m)return null;
+
+		const bk=m[1],para=m[2];
+		if (!backlinks[bk])return null;
+		if (!backlinks[bk][para])return null;
+		const linkobj=backlinks[bk][para];
+		let out=[];
+		for (let tdb in linkobj) {
+			const arr=linkobj[tdb].map( link=>[tdb,link]);
+			out=out.concat(arr);
+		}
+		return out;
 	}
 	const findbook=prefix=>{
 		if (booksentences[prefix]){
@@ -613,7 +629,7 @@ const Db=function(_d){
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
 		withtoc,withnote,withxref,gettoc,getxref,getDate,
 		getxrefofpage,getfromxref,getaux,gettocancestor,
-		bookseq2name,bookname2seq,addlink
+		bookseq2name,bookname2seq,addlink,getbacklinks
 	}
 }
 module.exports=Db;

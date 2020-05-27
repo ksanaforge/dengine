@@ -371,6 +371,10 @@ const getbookrange=(dbname,nipata,cb)=>{
 const setlogger=logfunc=>{
 	log=logfunc;
 }
+const getdbbookname=(set,bookseq)=>{
+	if (!dbpool[set])return;
+	return dbpool[set].bookseq2name(bookseq);
+}
 if (typeof window !=="undefined") {
 	window.jsonp=jsonp;
 }
@@ -378,5 +382,5 @@ module.exports={
 	open,openSearchable,fetchidarr,readpage,findtokens,concordance,
 	getbookrange,fetchpostings,search,setlogger,getshorthand,
 	jsonp,
-	openSync
+	openSync,getdbbookname
 }
