@@ -87,7 +87,11 @@ const getTocAncestor=(toc,vpl)=>{
 		cur=children[selected];
 		nextchildren=getTocChildren(toc,cur);
 		if (children.length && out.length==0||vplv>=vplval(toc[cur].l)) {
-			out.push([toc[ cur].t,toc[cur].l])
+			let t=toc[cur].t;
+			let ori_t=t;
+			const at=t.indexOf("|");
+			if (at>-1)t=t.substr(at+1);
+			out.push([t,toc[cur].l,ori_t])
 		}
 		if (!nextchildren.length) break;
 		children=nextchildren;
