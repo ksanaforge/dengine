@@ -49,6 +49,13 @@ const Db=function(_d){
 		});
 		return ready;
 	}
+	const islineready=(seq,count)=>{
+		if (typeof txts[seq]=="undefined"
+			||typeof txts[seq+count]=="undefined") {
+				return false;
+		}
+		return true;
+	}
 
 	const ispostingready=(field,tokens)=>{
 		var ready=true;
@@ -238,7 +245,7 @@ const Db=function(_d){
 		}
 		return "";
 	}
-	const seq2page=(seq,field,type)=>{
+	const seq2page=(seq,field,type="txt")=>{
 		let starts=db.txtstarts;
 		if (field){
 			var q=fieldseq(field);
@@ -300,6 +307,23 @@ const Db=function(_d){
 			if (fn) files[fn]=true;		
 		});
 		return Object.keys(files);
+	}
+
+	const scriptOfLines=(seq,count=1)=>{
+		const startpage=seq2page(seq,"","txt");
+		const endpage=seq2page(seq+count,"","txt");
+		const files=[];
+		for (var i=startpage;i<=endpage;i++) {
+			files.push(basedir+".txt."+i+".js");
+		}
+		return files;
+	}
+	const fetchlines=(seq,count=1)=>{
+		const out=[];
+		for (let i=seq;i<seq+count;i++){
+			out.push(txts[i]);
+		}
+		return out;
 	}
 	const fetch=idarr=>{
 		const out=[];
@@ -555,6 +579,7 @@ const Db=function(_d){
 	const gettocancestor=(sid)=>{
 		return getTocAncestor(gettoc(),sid);
 	}
+	const getname=()=>db.name;
 
 	const addlink=(links,fromdb,regex)=>{
 		//[hyperlink, target_vpl ]
@@ -629,7 +654,9 @@ const Db=function(_d){
 		getSerials,getHierarchy,getBlurb,guesslanguage,averagelength,termweight,
 		withtoc,withnote,withxref,gettoc,getxref,getDate,
 		getxrefofpage,getfromxref,getaux,gettocancestor,
-		bookseq2name,bookname2seq,addlink,getbacklinks
+		bookseq2name,bookname2seq,addlink,getbacklinks,getname,
+
+		scriptOfLines,islineready,fetchlines
 	}
 }
 module.exports=Db;

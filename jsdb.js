@@ -198,7 +198,34 @@ const fetchpostings=(dbname,field,tokens,cb)=>{
 		}
 	});
 };
+let readlineTimer=0,readlinetrycount=0;
+const readlines=(db,lineseq,count=1)=>{
+	const files=db.scriptOfLines(lineseq,count);
 
+
+	if (typeof cb!=="undefined"){
+		if (db.islineready(lineseq,count)){
+			cb(db.fetchlines(lineseq,count),db);
+			return;
+		}
+		clearInterval(readlineTimer);
+		readlineTimer=setInterval(()=>{
+			if (db.islineready(lineseq,count)){
+				clearInterval(readlineTimer);
+				cb&&cb(db.fetchlines(lineseq,count),db);
+			}
+			if (readlinetrycount>30) {
+				console.warn("giveup read line",lineseq);
+				clearInterval(readlineTimer);
+			}
+			readlinetrycount++;
+
+		},50);
+	} 
+
+	loadscript(files);
+	if (typeof cb=="undefined") return db.fetchlines(lineseq,count);
+}
 var readTimer=0,readtrycount=0;
 const readpage=(dbname,opts,cb)=>{
 	openSearchable(dbname,db=>{
@@ -231,7 +258,7 @@ const readpage=(dbname,opts,cb)=>{
 				console.warn("giveup cannot load page",opts.prefix);
 				clearInterval(fetchTimer);
 			}
-			fetchtrycount++;
+			readtrycount++;
 
 		},50);
 
@@ -382,5 +409,5 @@ module.exports={
 	open,openSearchable,fetchidarr,readpage,findtokens,concordance,
 	getbookrange,fetchpostings,search,setlogger,getshorthand,
 	jsonp,
-	openSync,getdbbookname
+	openSync,getdbbookname,readlines
 }
