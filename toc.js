@@ -88,7 +88,10 @@ const getTocAncestor=(toc,vpl)=>{
 		nextchildren=getTocChildren(toc,cur);
 		if (children.length && out.length==0||vplv>=vplval(toc[cur].l)) {
 			//label, link , first sibling, this tocseq
-			out.push({t:toc[cur].t,l:toc[cur].l,first:children[0],cur})
+			const obj=Object.assign({},toc[cur]);
+			obj.cur=cur;
+			obj.first=children[0];
+			out.push(obj)
 		}
 		if (!nextchildren.length) break;
 		children=nextchildren;

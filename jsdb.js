@@ -45,8 +45,8 @@ const jsonp=(data)=>{
 var opendbTimer=0,opentrycount=0;
 const open=(name,cb)=>{
 	if (dbpool[name]){
-		cb(dbpool[name]);
-		return;
+		if (typeof cb!=="undefined") cb(dbpool[name]);
+		return dbpool[name];
 	}
 	loadscript(name+"/"+name+".js");
 
