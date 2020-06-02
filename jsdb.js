@@ -201,7 +201,6 @@ const fetchpostings=(dbname,field,tokens,cb)=>{
 let readlineTimer=0,readlinetrycount=0;
 const readlines=(db,lineseq,count,cb)=>{
 	const files=db.scriptOfLines(lineseq,count);
-
 	if (typeof cb!=="undefined"){
 		if (db.islineready(lineseq,count)){
 			cb(db.fetchlines(lineseq,count),db);

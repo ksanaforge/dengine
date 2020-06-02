@@ -266,6 +266,7 @@ const Db=function(_d){
 		for (var i=0;i<starts.length;i++){
 			if (seq<starts[i]) return i-1;
 		}
+		return starts.length-2; // page files not more than this
 	}
 	const id2filename=id=>{
 		let seq=id2seq(id);
@@ -328,6 +329,9 @@ const Db=function(_d){
 			files.push(basedir+".txt."+i+".js");
 		}
 		return files;
+	}
+	const getline=seq=>{
+		return txts[seq]||"";
 	}
 	const fetchlines=(seq,count=1)=>{
 		const out=[];
@@ -638,6 +642,9 @@ const Db=function(_d){
 		}
 		let page=0;
 		const pages=booksentences[bk];
+		if (typeof pages=="undefined"){
+			throw "unknown book "+bk
+		}
 		if (typeof pages=="number") return pages;
 		for (let j=0;j<pages.length;j++) {
 			if (pages[j]>seq) {
@@ -688,7 +695,7 @@ const Db=function(_d){
 		getxrefofpage,getfromxref,getaux,gettocancestor,
 		bookseq2name,bookname2seq,addlink,getbacklinks,getname,
 
-		scriptOfLines,islineready,fetchlines,getbookstart
+		scriptOfLines,islineready,fetchlines,getbookstart,getline
 	}
 }
 module.exports=Db;
