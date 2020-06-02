@@ -5,6 +5,7 @@ const {createpages}=require("./paging");
 const bsearch=require("./bsearch")
 const {build,packpayload,writeExtra}=require("./builder");
 const {getTocChildren,buildToc}=require("./toc");
+const {parseCAP,CAPstr}=require("./capaddr")
 
 const {tokenize,TOKEN_REGEX}=require("./tokenizer");
 const {open,openSearchable,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
@@ -22,7 +23,7 @@ const API={
 	setlogger,packpayload,
 	getTocChildren,buildToc,getdbbookname,bsearch,
 	readlines,
-
+	parseCAP,CAPstr,
 //for node only
 	openSync
 }

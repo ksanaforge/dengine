@@ -219,9 +219,18 @@ const Db=function(_d){
 		return 0;
 	}
 	const seq2id_cont=seq=>{
-		let book='',page=0,sen=0;
+		let book='',bk=-1,page=0,sen=0;
 		for (let i=0;i<booknames.length;i++){
-			const pages=booksentences[i];
+			const pages=booksentences[booknames[i]];
+			if (typeof pages=="number") { //for mat
+				if (pages>seq) {
+					book=booknames[i-1];
+					bk=i;
+					page= seq-booksentences[book];
+					break;
+				}
+				continue;
+			}
 			book=booknames[i];
 			for (let j=0;j<pages.length;j++) {
 				if (pages[j]>seq) {
@@ -232,7 +241,9 @@ const Db=function(_d){
 			}
 			if (sen) break;
 		}
-		return book+SEGSEP+page+LEVELSEP+sentence;
+		let id=(bk>-1?bk:book)+SEGSEP+page;
+		if (sen) id+=LEVELSEP+sen;
+		return id;
 	}
 	const seq2id=seq=>{
 		if (db.continuouspage) return seq2id_cont(seq); 
@@ -321,7 +332,8 @@ const Db=function(_d){
 	const fetchlines=(seq,count=1)=>{
 		const out=[];
 		for (let i=seq;i<seq+count;i++){
-			out.push(txts[i]);
+			let content=txts[i].split(LANGSEP);
+			out.push( [i].concat(content));
 		}
 		return out;
 	}
@@ -548,7 +560,11 @@ const Db=function(_d){
 	const withtoc=()=>db.withtoc;
 	const withnote=()=>db.withnote;
 	const withxref=()=>db.withxref;
-	const getaux=()=>db.aux;
+	const getaux=()=>{
+		const aux=db.aux;
+		if (typeof aux.paranum=="string") aux.paranum=eval(aux.paranum);
+		return aux;
+	}
 	const gettoc=field=>field?toc[field]:toc[db.fields[0]];
 	const getxref=field=>field?xrefs[field]:xrefs[db.fields[0]];
 	
@@ -616,6 +632,22 @@ const Db=function(_d){
 		}
 		return out;
 	}
+	const getbookstart=bk=>{
+		if (typeof bk=="number") {
+			bk=booknames[bk];
+		}
+		let page=0;
+		const pages=booksentences[bk];
+		if (typeof pages=="number") return pages;
+		for (let j=0;j<pages.length;j++) {
+			if (pages[j]>seq) {
+				page=j;
+				sen=pages[j]-seq;
+				break;
+			}
+		}
+		return page;
+	}
 	const findbook=prefix=>{
 		if (booksentences[prefix]){
 			const n=booknames.indexOf(prefix);
@@ -656,7 +688,7 @@ const Db=function(_d){
 		getxrefofpage,getfromxref,getaux,gettocancestor,
 		bookseq2name,bookname2seq,addlink,getbacklinks,getname,
 
-		scriptOfLines,islineready,fetchlines
+		scriptOfLines,islineready,fetchlines,getbookstart
 	}
 }
 module.exports=Db;
