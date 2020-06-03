@@ -57,7 +57,7 @@ const CAPx0=(cap,newp)=>{
 	let x=cap.x;
 	let p=cap.p;
 	if (newp){
-		x=cap.x=0;
+		x=0;
 		p=newp;
 	}
 	
@@ -79,17 +79,18 @@ const dbofbk=bk=>{
 const newp=function(p){
 	const cap=this;
 	const n=CAPx0(cap,p);
-	return parseCAP(n,cap.db);
+	return parse(n,cap.db);
 }
-const nextp=function(){
+const nextp=function(count){
 	const cap=this;
-	const next=CAPx0(cap,cap.p+1);
-	return parseCAP(next,cap.db);
+	const next=CAPx0(cap,cap.p+(count||1));
+	return parse(next,cap.db);
 }
-const prevp=function(){
+const prevp=function(count){
 	const cap=this;
-	const prev=CAPx0(cap,cap.p-1);
-	return parseCAP(prev,cap.db);
+	const p=cap.x?cap.p:cap.p-(count||1);
+	const prev=CAPx0(cap,p);
+	return parse(prev,cap.db);
 }
 
 const getline=function(seq){
@@ -98,10 +99,12 @@ const getline=function(seq){
 	return cap.db.getline(seq);
 }
 const parse=(str,db)=>{
-	const at=str.indexOf("@");
-	if (at>-1){
-		db=str.substr(0,at);
-		str=str.substr(at+1);
+	if (typeof str=="string"){
+		const at=str.indexOf("@");
+		if (at>-1){
+			db=str.substr(0,at);
+			str=str.substr(at+1);
+		}		
 	}
 
 	if (typeof db=="string") db=open(db);
@@ -112,14 +115,14 @@ const parse=(str,db)=>{
 	}
 	let out;
 	if (typeof str=='number') {//absolute jsdb line number
-		str=db.seq2id(str);
+		str=db.seq2id(str+1);
 	}
 
 	if (str.indexOf(SEGSEP)>-1) {
 		const at=str.indexOf(SEGSEP);
 		const bkseq=parseInt(str.substr(0,at));
 		const bk=db.bookseq2name(bkseq)
-		const bk0=parseInt(str.substr(at+1));
+		const bk0=parseInt(str.substr(at+1))-1;
 		out=createCAPobj({db,bk,bkseq,bk0})
 	} else {
 		const at=str.indexOf("_");
@@ -153,7 +156,7 @@ const parse=(str,db)=>{
 		out.x0=CAPx0(out);//x is updated
 	}
 	
-	out.bkx=out.bkseq+SEGSEP+out.bk0;
+	out.bkx=out.bkseq+SEGSEP+(out.bk0+1);
 
 	out.prevp=prevp.bind(out);
 	out.nextp=nextp.bind(out);

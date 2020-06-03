@@ -198,8 +198,14 @@ const fetchpostings=(dbname,field,tokens,cb)=>{
 		}
 	});
 };
+const MAXREADLINE=1000;
 let readlineTimer=0,readlinetrycount=0;
+//task queue
 const readlines=(db,lineseq,count,cb)=>{
+	if (isNaN(count))count=1;
+	if (count>MAXREADLINE)count=MAXREADLINE;
+	if (count<1)count=1;
+
 	const files=db.scriptOfLines(lineseq,count);
 	if (typeof cb!=="undefined"){
 		if (db.islineready(lineseq,count)){
