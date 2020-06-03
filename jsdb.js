@@ -42,8 +42,9 @@ const jsonp=(data)=>{
 		}
 	}
 }
-var opendbTimer=0,opentrycount=0;
+
 const open=(name,cb)=>{
+	var opendbTimer=0,opentrycount=0;
 	if (dbpool[name]){
 		if (typeof cb!=="undefined") cb(dbpool[name]);
 		return dbpool[name];
@@ -199,7 +200,23 @@ const fetchpostings=(dbname,field,tokens,cb)=>{
 	});
 };
 const MAXREADLINE=1000;
-let readlineTimer=0,readlinetrycount=0;
+
+const readtasks={};
+
+const addreadtask=(db,lineseq,count,cb)=>{
+	let readlinetrycount=0;
+	let readlineTimer=setInterval(()=>{
+		if (db.islineready(lineseq,count)){
+			clearInterval(readlineTimer);
+			cb&&cb(db.fetchlines(lineseq,count),db);
+		}
+		if (readlinetrycount>30) {
+			console.warn("giveup read line",lineseq);
+			clearInterval(readlineTimer);
+		}
+		readlinetrycount++;
+	},50);
+}
 //task queue
 const readlines=(db,lineseq,count,cb)=>{
 	if (isNaN(count))count=1;
@@ -212,19 +229,7 @@ const readlines=(db,lineseq,count,cb)=>{
 			cb(db.fetchlines(lineseq,count),db);
 			return;
 		}
-		clearInterval(readlineTimer);
-		readlineTimer=setInterval(()=>{
-			if (db.islineready(lineseq,count)){
-				clearInterval(readlineTimer);
-				cb&&cb(db.fetchlines(lineseq,count),db);
-			}
-			if (readlinetrycount>30) {
-				console.warn("giveup read line",lineseq);
-				clearInterval(readlineTimer);
-			}
-			readlinetrycount++;
-
-		},50);
+		addreadtask(db,lineseq,count,cb);
 	} 
 
 	loadscript(files);
