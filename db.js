@@ -229,6 +229,11 @@ const Db=function(_d){
 					page= seq-booksentences[book];
 					break;
 				}
+				if (i==booknames.length-1){ //last book
+					book=booknames[i];
+					bk=i+1;
+					page=seq-booksentences[book];
+				}
 				continue;
 			}
 			book=booknames[i];
@@ -241,6 +246,8 @@ const Db=function(_d){
 			}
 			if (sen) break;
 		}
+
+
 		let id=(bk>-1?bk:book)+SEGSEP+page;
 		if (sen) id+=LEVELSEP+sen;
 		return id;
@@ -256,6 +263,7 @@ const Db=function(_d){
 		}
 		return "";
 	}
+
 	const seq2page=(seq,field,type="txt")=>{
 		let starts=db.txtstarts;
 		if (field){
@@ -556,6 +564,8 @@ const Db=function(_d){
 		const posting=postingss[field][seq];
 		return  average / posting.length;	
 	}
+
+	const totalline=()=>db.txtstarts[db.txtstarts.length-1];
 	
 	const searchable=()=>!db.textonly;
 	const getdoclen=(field,docid)=>doclens[field][docid];
@@ -695,7 +705,7 @@ const Db=function(_d){
 		getxrefofpage,getfromxref,getaux,gettocancestor,
 		bookseq2name,bookname2seq,addlink,getbacklinks,getname,
 
-		scriptOfLines,islineready,fetchlines,getbookstart,getline
+		scriptOfLines,islineready,fetchlines,getbookstart,getline,totalline
 	}
 }
 module.exports=Db;

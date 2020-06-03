@@ -13,6 +13,9 @@ const createCAPobj=(obj,prevbk)=>{
 		z:0,  //syllable count ,if==-1, point to a complete word
 		x0:0, //absolute linecount
 		bk0:-1, //line count from this book
+		px:0,  //total line of this p
+		       // x0-x+px   ==> first line of next p
+		       // x0-x      ==> first line of this p
 	};
 
 	const out=Object.assign(def,obj);
@@ -43,27 +46,51 @@ const pofx=cap=>{ //x0 within the range of p,p+1
 		if (!arr[i]) l=prev; //some arr[i] is empty , use previous value
 		else l=arr[i];
 		if (l>cap.bk0) {
-			if (i==0) return [0, cap.bk0 ]
-			return [i-1, cap.bk0-arr[i-1] ];
+			if (i==0) return [0, cap.bk0 ];
+			while( !arr[i-1] && i>1) {	
+				i--; //some para is missing s0403a3 no p25,p26 
+			} 
+			let j=i;
+			while (!arr[j]&&j<arr.length-1) j++;
+			return [i-1, cap.bk0-arr[i-1], arr[j]-arr[i-1] ];
 		}
 		prev=l;
 	}
-	return [arr.length-1,cap.bk0-arr[arr.length-1]];
+	let px=1;
+	if (paranum[cap.bkseq+1]) {
+		const nextbookstart=cap.db.getbookstart(cap.bkseq);
+		px=nextbookstart-arr[arr.length-1];
+	} else {
+		const thisbookstart=cap.db.getbookstart(cap.bkseq-1);
+		px=cap.db.totalline()-thisbookstart-arr[arr.length-1];
+	}
+
+	return [arr.length-1,cap.bk0-arr[arr.length-1], px ];
 }
-const CAPx0=(cap,newp)=>{
+const CAPx0=(cap)=>{
 	//booksentences start from 0
-	let bookstart=cap.db.id2seq(cap.bk+SEGSEP+"1");
+	//let bookstart=cap.db.id2seq(cap.bk+SEGSEP+"1");
+	let bookstart=cap.db.getbookstart(cap.bk);
 	const {paranum}=cap.db.getaux();
 	let x=cap.x;
 	let p=cap.p;
-	if (newp){
-		x=0;
-		p=newp;
+
+	if (p==-1) {
+		let bk0=cap.bk0; //resolved by n:n format
+		if (bk0==-1) bk0=0;
+		return bookstart+bk0+x;
 	}
-	
-	if (p>paranum[cap.bkseq].length-1) p=paranum[cap.bkseq].length-1
+	const parr=paranum[cap.bkseq];
+
+	if (p>parr.length-1) {
+		p=parr.length-1
+	}
 	if (p<0) p=0;
 
+	while (p&&p<parr.length && !parr[p]) {
+		p++;
+	} 
+	
 	let pstart=paranum[cap.bkseq][p];
 	x+=pstart;
 	x0=bookstart+x;
@@ -76,23 +103,27 @@ const dbofbk=bk=>{
 	}
 	return '';
 }
-const newp=function(p){
+const floor=function(){ //to begining of this line
 	const cap=this;
-	const n=CAPx0(cap,p);
-	return parse(n,cap.db);
+	if (cap.x) {
+		cap.x0-=cap.x;
+		cap.bk0-=cap.x;
+		cap.x=0;
+	}
+	return cap.x0;
 }
-const nextp=function(count){
+const nextp=function(){
 	const cap=this;
-	const next=CAPx0(cap,cap.p+(count||1));
-	return parse(next,cap.db);
+	const np=cap.x0-cap.x+cap.px;
+	return parse(np,cap.db);
 }
-const prevp=function(count){
+const prevp=function(){
 	const cap=this;
-	const p=cap.x?cap.p:cap.p-(count||1);
-	const prev=CAPx0(cap,p);
-	return parse(prev,cap.db);
+	let prev=cap.x?cap.x0-cap.x:cap.x0-1;
+	const pv = parse(prev,cap.db);
+	pv.floor();
+	return pv;
 }
-
 const getline=function(seq){
 	const cap=this;
 	seq=seq||cap.x0;
@@ -149,18 +180,16 @@ const parse=(str,db)=>{
 	}
 	
 	//get relative line
-	if (out.p==-1) {
-		p=pofx(out);
-		out.p=p[0];
-		out.x=p[1];
-		out.x0=CAPx0(out);//x is updated
-	}
-	
+	const pp=pofx(out);
+	out.p=pp[0]; //paranum
+	out.x=pp[1]; //line offset
+	out.px=pp[2];//line of this para
+
 	out.bkx=out.bkseq+SEGSEP+(out.bk0+1);
 
 	out.prevp=prevp.bind(out);
 	out.nextp=nextp.bind(out);
-	out.newp=newp.bind(out);
+	out.floor=floor.bind(out);
 	out.stringify=stringify.bind(out);
 	out.getline=getline.bind(out);
 

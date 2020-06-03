@@ -4,7 +4,7 @@ const makelinklist=bklinks=>{
 		const arr=bklinks[bk];
 		for (var i=0;i<arr.length;i++) {
 			const m=arr[i].match(/([\da-f]+)p(\d+)/)
-			out.push( [bk+"p"+m[2] , parseInt('0x'+m[1]) ]);
+			out.push( [bk+"_p"+m[2] , parseInt('0x'+m[1]) ]);
 		}
 	}
 	return out;
