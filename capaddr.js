@@ -142,7 +142,7 @@ const parse=(str,db)=>{
 	if (typeof db=="undefined") db=open(dbofbk(str));
 
 	if (!db) {
-		throw "no db to parse cap"
+		throw "no db to parse cap "+str
 	}
 	let out;
 	if (typeof str=='number') {//absolute jsdb line number
@@ -169,6 +169,7 @@ const parse=(str,db)=>{
 			let k=item[0];
 			const v=parseInt(item.substr(1))||0;
 			o[k]=v;
+			if (k=="z" && v==0) o[k]=-1;//ends with z without number
 		});
 
 		out=createCAPobj(o);
