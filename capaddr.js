@@ -2,6 +2,7 @@
 const {SEGSEP}=require("./segment");
 const {getaux}=require("./db");
 const {open}=require("./jsdb");
+const {syllabify,isSyllable}=require("./paliutil")
 const createCAPobj=(obj,prevbk)=>{
 	const def={bk:'', //book name 
 		bkseq:0,
@@ -129,6 +130,21 @@ const getline=function(seq){
 	seq=seq||cap.x0;
 	return cap.db.getline(seq);
 }
+const getsel=function(){
+	const cap=this;
+	if (cap.y<0||cap.z<1) return null;		
+	const t=this.getline();
+	const arr=syllabify(t);
+	let y=0,out='';
+	for (let i=0;i<arr.length;i++){
+		const snip=arr[i];
+		if (isSyllable(snip)) y++;
+
+		if (y>cap.y) out+=snip;
+		if (y>=cap.y+cap.z) break;
+	}
+	return out;
+}
 const parse=(str,db)=>{
 	if (typeof str=="string"){
 		const at=str.indexOf("@");
@@ -193,6 +209,7 @@ const parse=(str,db)=>{
 	out.floor=floor.bind(out);
 	out.stringify=stringify.bind(out);
 	out.getline=getline.bind(out);
+	out.getsel=getsel.bind(out);
 
 	return out;
 }
