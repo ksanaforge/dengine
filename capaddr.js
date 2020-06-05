@@ -97,11 +97,16 @@ const CAPx0=(cap)=>{
 	x0=bookstart+x;
 	return x0;
 }
+const anna={"e0101n":"mul","e0102n":"mul","e0103n":"att","e0104":"att"}
+
 const dbofbk=bk=>{
 	const m=bk.match(/\d+([mat])\d?_/);
 	if (m) {
-		return {m:"mul","a":"att","t":"tik"}[m[1]];
+		return {m:"mul",a:"att",t:"tik"}[m[1]];
+	} else {
+		return anna[bk.substr(0,6)];//dirty hack
 	}
+
 	return '';
 }
 const floor=function(){ //to begining of this line

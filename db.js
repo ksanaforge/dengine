@@ -617,6 +617,7 @@ const Db=function(_d){
 		for (var i=0;i<links.length;i++){
 			const m=links[i][0].match(hyperlink_regex);
 			const bk=m[1],para=m[2];
+
 			if (!backlinks[bk]) {
 				backlinks[bk]={};
 			}

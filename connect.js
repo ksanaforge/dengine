@@ -3,8 +3,8 @@ const makelinklist=bklinks=>{
 	for (bk in bklinks) {
 		const arr=bklinks[bk];
 		for (var i=0;i<arr.length;i++) {
-			const m=arr[i].match(/([\da-f]+)p(\d+)/)
-			out.push( [bk+"_p"+m[2] , parseInt('0x'+m[1]) ]);
+			const m=arr[i].match(/(.+?)\|p(\d+)/)
+			out.push( [bk+"_p"+m[2] , m[1] ]);
 		}
 	}
 	return out;
