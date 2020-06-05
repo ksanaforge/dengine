@@ -178,8 +178,15 @@ const parse=(str,db)=>{
 		}
 		const arr=str.substr( at ).split(/([a-z_]\d+)/)
 		.filter(item=>item);
-		const bk=str.substr(0,at);
-		const bkseq=db.bookname2seq(bk);
+		let bk=str.substr(0,at);
+		let bkseq=0;
+		if (parseInt(bk).toString()===bk) {
+			bkseq=parseInt(bk);
+			bk=db.bookseq2name(bkseq);
+		} else {
+			bkseq=db.bookname2seq(bk);
+		}
+
 		const o={db,bk,bkseq};
 		arr.forEach(item=>{
 			let k=item[0];
