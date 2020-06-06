@@ -6,7 +6,7 @@ const bsearch=require("./bsearch")
 const {build,packpayload,writeExtra}=require("./builder");
 const {getTocChildren,buildToc}=require("./toc");
 const {parse}=require("./capaddr")
-const {syllabify,isSyllable,isPaliword}=require("./paliutil");
+const {syllabify,isSyllable,isPaliword,palialpha}=require("./paliutil");
 
 const {tokenize,TOKEN_REGEX}=require("./tokenizer");
 const {open,openSearchable,fetchidarr,readpage,findtokens,searchtokens,fetchpostings,
@@ -25,7 +25,7 @@ const API={
 	getTocChildren,buildToc,getdbbookname,bsearch,
 	readlines,
 	parse,
-	syllabify,isSyllable,isPaliword,
+	syllabify,isSyllable,isPaliword,palialpha,
 //for node only
 	openSync
 }
