@@ -203,10 +203,46 @@ const build=(meta,raw)=>{
 	if (writetodisk) fs.writeFileSync(outfn, outstr ,"utf8" );
 }
 
+const buildsimple=(meta,raw)=>{
+	let prevbk=null,bk=0,page=0,linecount=0;
+	let bookpages={},txt=[],pagelines=[];
+	for (var i=0;i<raw.length;i++){
+		let line=raw[i];
+		if (line[0]=="%" && line[1]=="%") {
+			const m=line.match(/(\d+):(\d+)/);
+			if (!m) {
+				throw "error line "+line;
+			}
+			bk=parseInt(m[1]);
+			page=parseInt(m[2]);
+			pagelines.push(linecount);
+			linecount=0;
+			if (prevbk && prevbk!==bk) {
+				bookpages[prevbk]=pagelines;
+				pagelines=[];
+			}
+			prevbk=bk;
+			continue;
+		}
+
+		txt.push(line);
+		linecount++;
+	}
+	bookpages[bk]=pagelines;
+	const txtstarts=multifile(meta.name,"","txt",meta.outdir,txt);
+
+	let dbobj={ name:meta.name,date:(new Date).toISOString()};
+	dbobj.txtstarts=txtstarts;
+	dbobj.bookpages=bookpages;
+	const outstr=packpayload(dbobj, [] );
+	const outfn=meta.outdir+meta.name+".js";
+	if (writetodisk) fs.writeFileSync(outfn, outstr ,"utf8" );
+}
 const writeExtra=(outfn,meta,arr)=>{
 	meta.date=(new Date).toISOString();
 	let outstr=packpayload(meta,arr);
 	if (writetodisk) fs.writeFileSync( outfn ,outstr,"utf8" );
+
 }
 
-module.exports={build,packpayload,writeExtra}
+module.exports={build,buildsimple,packpayload,writeExtra}

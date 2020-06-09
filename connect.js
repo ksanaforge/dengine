@@ -11,7 +11,7 @@ const makelinklist=bklinks=>{
 }
 const buildbacklink=(dbname,dbpool)=>{
 	const sourcedb=dbpool[dbname];
-	if (!sourcedb.getaux())return;
+	if (!sourcedb.getaux || !sourcedb.getaux())return;
 	const matlinks=sourcedb.getaux().matlinks;
 	if (!matlinks)return;
 

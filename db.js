@@ -525,7 +525,6 @@ const Db=function(_d){
 		bookstarts.length=1;
 		bookstarts[0]=0;
 		db.segids=_d.segids.split(/\r?\n/);
-
 		for (var i=0;i<db.segids.length;i++) {
 			let id=db.segids[i];
 			if (id.indexOf(SEGSEP)>0) {
@@ -576,7 +575,7 @@ const Db=function(_d){
 	const withxref=()=>db.withxref;
 	const getaux=()=>{
 		const aux=db.aux;
-		if (typeof aux.paranum=="string") aux.paranum=eval(aux.paranum);
+		if (aux && typeof aux.paranum=="string") aux.paranum=eval(aux.paranum);
 		return aux;
 	}
 	const gettoc=field=>field?toc[field]:toc[db.fields[0]];

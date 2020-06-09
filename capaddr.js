@@ -3,41 +3,9 @@ const {SEGSEP}=require("./segment");
 const {getaux}=require("./db");
 const {open}=require("./jsdb");
 const {syllabify,isSyllable}=require("./paliutil")
-const createCAPobj=(obj,prevbk)=>{
-	const def={bk:'', //book name 
-		bkseq:0,
-		_:0 ,  //paranum group, most book has only one.
-		p:-1 ,  //paranum -1=not resolved
-		x:0,   //line offset from paranum, paranum==0 from beginning of book
-		       //line==1 , point to end of first line, begin of next line
-		y:0,  //syllabus from begining of line
-		z:0,  //syllable count ,if==-1, point to a complete word
-		x0:0, //absolute linecount
-		bk0:-1, //line count from this book
-		px:0,  //total line of this p
-		       // x0-x+px   ==> first line of next p
-		       // x0-x      ==> first line of this p
-	};
+const {createCAPobj,stringify,floor,getline,nextp,prevp}=require("./cap");
 
-	const out=Object.assign(def,obj);
-	if (typeof prevbk!=="undefined" && out.bk=='') {
-		out.bk=prevbk;
-	}
-	return out;
-}
 
-const stringify=function(){
-	const cap=this;
-	let bk=cap.bk;
-	let o=bk+"_";
-	if (cap._) o+=cap._;
-	if (cap.p) o+='p'+cap.p;
-	if (cap.x||cap.p==0) o+='x'+cap.x;
-	if (cap.y) o+='y'+cap.y;
-	if (cap.z==-1) o+='z';
-	else if (cap.z>0) o+='z'+cap.z;
-	return o;
-}
 const pofx=cap=>{ //x0 within the range of p,p+1
 	const {paranum}=cap.db.getaux();
 	const arr=paranum[cap.bkseq];
@@ -109,32 +77,8 @@ const dbofbk=bk=>{
 
 	return '';
 }
-const floor=function(){ //to begining of this line
-	const cap=this;
-	if (cap.x) {
-		cap.x0-=cap.x;
-		cap.bk0-=cap.x;
-		cap.x=0;
-	}
-	return cap.x0;
-}
-const nextp=function(){
-	const cap=this;
-	const np=cap.x0-cap.x+cap.px;
-	return parse(np,cap.db);
-}
-const prevp=function(){
-	const cap=this;
-	let prev=cap.x?cap.x0-cap.x:cap.x0-1;
-	const pv = parse(prev,cap.db);
-	pv.floor();
-	return pv;
-}
-const getline=function(seq){
-	const cap=this;
-	seq=seq||cap.x0;
-	return cap.db.getline(seq);
-}
+
+
 const getsel=function(){
 	const cap=this;
 	if (cap.y<0||cap.z<1) return null;		
@@ -150,7 +94,9 @@ const getsel=function(){
 	}
 	return out;
 }
-const parse=(str,db)=>{
+const parseCAP2=require("./parsecap");
+
+const parseCAP=(str,db)=>{
 	if (typeof str=="string"){
 		const at=str.indexOf("@");
 		if (at>-1){
@@ -165,6 +111,7 @@ const parse=(str,db)=>{
 	if (!db) {
 		throw "no db to parse cap "+str
 	}
+	if (db.ver==2) return parseCAP2(str,db);
 	let out;
 	if (typeof str=='number') {//absolute jsdb line number
 		str=db.seq2id(str+1);
@@ -239,4 +186,4 @@ const test=()=>{
 	})
 }
 //test();
-module.exports={parse};
+module.exports={parseCAP};

@@ -2,6 +2,7 @@
 let fs=null,loadscript;
 
 const Db=require("./db");
+const Db2=require("./db2");
 const {concordancesearch}=require("./concordance");
 let log=()=>{console.log.call(arguments)};
 let dbpool={};
@@ -35,7 +36,11 @@ const jsonp=(data)=>{
 		const name=data.meta.name;
 		const db=dbpool[name];
 		if (!db) {
-			dbpool[name]=new Db( Object.assign(data.meta,{segids:data.payload}));
+			if (data.meta.ver==2){
+				dbpool[name]=new Db2( Object.assign(data.meta,{payload:data.payload}));				
+			} else {
+				dbpool[name]=new Db( Object.assign(data.meta,{segids:data.payload}));
+			}
 		} else {
 			if (verbose) console.log("set data",data.meta)
 			db.setdata(data.meta,data.payload);
@@ -57,7 +62,7 @@ const open=(name,cb)=>{
 		if (dbpool[name]) {
 			clearInterval(opendbTimer);
 			buildbacklink(name,dbpool);
-			cb(dbpool[name]);
+			cb&&cb(dbpool[name]);
 		}
 		if (opentrycount>10) clearInterval(opendbTimer);
 		opentrycount++;
@@ -65,6 +70,7 @@ const open=(name,cb)=>{
 }
 const loadsearchable=function(db){
 	const fields=db.getfields();
+	if (!fields)return;
 	const files=[];
 	for (let field of fields){
 		if (!db.gettokens(field)){
@@ -84,12 +90,17 @@ const fetchSync=function(idarr){
 	return this.fetch(idarr);
 }
 
+
+
 const openSync=(name,opts)=>{
 	if (typeof opts=="undefined") opts={};
 	loadscript(name+"/"+name+".js");
 	const db= dbpool[name];
 	if (!db)return null;
 
+	if (db.ver==2) {
+		return db;
+	}
 	buildbacklink(name,dbpool);
 	if (!opts.textonly) {
 		loadsearchable(db);
