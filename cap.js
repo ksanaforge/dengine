@@ -1,4 +1,4 @@
-const createCAPobj=(obj,prevbk)=>{
+const createCAPobj=(obj,newvalues)=>{
 	const def={bk:'', //book name 
 		bkseq:0,
 		_:0 ,  //paranum group, most book has only one.
@@ -20,11 +20,18 @@ const createCAPobj=(obj,prevbk)=>{
 	};
 
 	const out=Object.assign(def,obj);
-	if (typeof prevbk!=="undefined" && out.bk=='') {
-		out.bk=prevbk;
+	
+	for (var i in newvalues) {
+		if (out.hasOwnProperty(i)) {
+			out[i]=newvalues[i];
+		}
 	}
+
+	
 	return out;
 }
+
+
 const stringify=function(){
 	const cap=this;
 	let bk=cap.bk;
@@ -48,21 +55,9 @@ const floor=function(){ //這一頁的開頭的絕對行數
 	return cap.x0;
 }
 
-const nextp=function(){
-	const cap=this;
-	const np=cap.x0-cap.x+cap.px;
-	return parseCAP(np,cap.db);
-}
-const prevp=function(){
-	const cap=this;
-	let prev=cap.x?cap.x0-cap.x:cap.x0-1;
-	const pv = parseCAP(prev,cap.db);
-	pv.floor();
-	return pv;
-}
 const getline=function(seq){
 	const cap=this;
 	seq=seq||cap.x0;
-	return cap.db.getline(seq);
+	return cap.db().getline(seq);
 }
-module.exports={createCAPobj,stringify,floor,nextp,prevp,getline}
+module.exports={createCAPobj,stringify,floor,getline}

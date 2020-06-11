@@ -134,5 +134,5 @@ if (typeof process!=="undefined" && process.argv.length==2){
 */
 //729,000
 module.exports={
-	test,pack1,pack3,unpack3,unpack1,unpack2,unpacksmallint,packsmallint
+	test,pack1,pack2,pack3,unpack3,unpack1,unpack2,unpacksmallint,packsmallint
 }

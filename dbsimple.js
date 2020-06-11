@@ -92,7 +92,7 @@ const addbook=function(bk){
 	B.pageline=[];
 	B.bk=bk;
 }
-const done=function(){
+const done=function(payload,extra){
 	const B=this;
 	let dbobj={ name:B.opts.name,date:(new Date).toISOString()
 		,ver:2};
@@ -101,7 +101,9 @@ const done=function(){
 	dbobj.bookstarts=B.bookstarts;
 	dbobj.pagelines=B.pagelines;
 
-	const outstr=packpayload(dbobj, [] );
+	if (Object.keys(extra||{}).length) dbobj.extra=extra;
+
+	const outstr=packpayload(dbobj,payload||[]);
 	const outfn=B.opts.outdir+B.opts.name+".js";
 
 	if (writetodisk) fs.writeFileSync(outfn, outstr ,"utf8" );

@@ -20,6 +20,13 @@ const Db2=function(_d){
 			txts[meta.start+i] = lines[i];
 		}
 	}
+	const islineready=(x0,count)=>{
+		if (typeof txts[x0]=="undefined"
+			||typeof txts[x0+count-1]=="undefined") {
+				return false;
+		}
+		return true;
+	}
 	const getsegment=(x0,type="txt")=>{
 		let starts=db[type+"starts"];
 		for (var i=0;i<starts.length;i++){
@@ -35,7 +42,7 @@ const Db2=function(_d){
 	}
 	const getpageline=bkseq=>{
 		let pageline=db.pagelines[bkseq];
-
+		if (!pageline)return null;
 		if (Array.isArray(pageline)) {
 			return pageline;
 		} else {
@@ -54,8 +61,10 @@ const Db2=function(_d){
 		const bk0=db.bookstarts[bkseq];
 
 		for (var i=0;i<pageline.length;i++){
-			if (x0<bk0+pageline[i]) return {bkseq,bk0,
-				p:i,x: x0-bk0-pageline[i-1]};
+			if (x0<bk0+pageline[i]) {
+				if (i==0) i=1;
+				return {bkseq,bk0,p:i-1,x: x0-bk0-(pageline[i-2]?pageline[i-2]:0)}
+			};
 		}
 		return {bkseq,bk0,p:pageline.length-1,
 			x: x0-bk0-pageline[pageline.length-2]};
@@ -79,17 +88,26 @@ const Db2=function(_d){
 		}
 		return out;
 	}
-	const totalline=()=>db.txtstarts[db.txtstarts.length-1];
 	const load=()=>{
 		//console.log("load db")
 	}
 	load();
-	return {ver:2,
-		booknames:db.booknames,
+
+	const inst={ver:2,
 		bookstarts:db.bookstarts,
-		getpageline,
-		getsegment,pagefromx0,totalline,
+		getpageline,islineready,
+		getsegment,pagefromx0,
 		scriptOfLines,getline,fetchlines,setdata};
+	
+	ODef=Object.defineProperty;
+
+	ODef(inst,'booknames', {get:()=>db.booknames});
+	ODef(inst,'extra', {get:()=>db.extra});
+	ODef(inst,'payload', {get:()=>db.payload, set:py=>db.payload=py});
+	ODef(inst,'bookstarts',{get:()=>db.bookstarts});
+	ODef(inst,'totalline', {get:()=>db.txtstarts[db.txtstarts.length-1]});
+
+	return inst;
 }
 
 module.exports=Db2;
