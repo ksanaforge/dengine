@@ -65,13 +65,13 @@ const bindMethods=(cap,db)=>{
 	Object.defineProperty(cap,"db",{get:()=>db});
 }
 const nextp=function(){
-	const np=createCAPobj(this,{_:this._+1});
+	const np=createCAPobj(this,{y:0,z:0,_:this._+1});
 	recal(np,this.db);
 	bindMethods(np,this.db);
 	return np;
 }
 const prevp=function(){
-	const pv=createCAPobj(this ,{_:this._-1});
+	const pv=createCAPobj(this ,{y:0,z:0,_:this._-1});
 	recal(pv,this.db);
 	bindMethods(pv,this.db);
 	pv.floor();
