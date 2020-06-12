@@ -1,14 +1,18 @@
+'use stricts';
 const parsecap2=require("./parsecap");
 const {unpacksmallint}=require("./packintarr")
+const {setupToc,getTocAncestor}=require("./toc");
+const {addlink,findbacklinks}=require("./backlink");
 const Db2=function(_d){
 	const db=Object.assign({},_d);
 	const basedir=db.name+"/"+db.name;
-	const txts=[];
+	const _txts=[],_backlinks={};
+	let _toc=null;
 	const setdata=(meta,payload)=>{
 		if (meta.type=="txt"){
 			settexts(meta,payload);
 		} else if (meta.type=="toc"){
-			//toc[meta.field]=setupToc(payload.split(/\r?\n/));
+			_toc=setupToc(payload.split(/\r?\n/));
 		} else if (meta.type=="xref"){
 			//xrefs[meta.target]=true;
 			//setupXref(meta,payload.split(/\r?\n/));
@@ -17,12 +21,12 @@ const Db2=function(_d){
 	const settexts=(meta,text)=>{
 		const lines=text.split(/\r?\n/);
 		for (var i=0;i<lines.length;i++) {
-			txts[meta.start+i] = lines[i];
+			_txts[meta.start+i] = lines[i];
 		}
 	}
 	const islineready=(x0,count)=>{
-		if (typeof txts[x0]=="undefined"
-			||typeof txts[x0+count-1]=="undefined") {
+		if (typeof _txts[x0]=="undefined"
+			||typeof _txts[x0+count-1]=="undefined") {
 				return false;
 		}
 		return true;
@@ -79,30 +83,42 @@ const Db2=function(_d){
 		return files;
 	}
 	const getline=x0=>{
-		return txts[x0]||"";
+		return _txts[x0]||"";
 	}
 	const fetchlines=(seq,count=1)=>{
 		const out=[];
 		for (let i=seq;i<seq+count;i++){
-			out.push( [i,txts[i]]);
+			out.push( [i,_txts[i]]);
 		}
 		return out;
+	}
+	const getbacklinks=sid=>{
+		return findbacklinks(_backlinks,sid)
 	}
 	const load=()=>{
 		//console.log("load db")
 	}
 	load();
+	const gettocancestor=sid=>getTocAncestor(_toc,sid);
 
 	const inst={ver:2,
 		bookstarts:db.bookstarts,
 		getpageline,islineready,
-		getsegment,pagefromx0,
+		getbacklinks,
+		getsegment,pagefromx0,gettocancestor,
 		scriptOfLines,getline,fetchlines,setdata};
 	
 	ODef=Object.defineProperty;
 
+	inst.addlink=addlink.bind(_backlinks)
+	ODef(inst,'name', {get:()=>db.name});
+	ODef(inst,'basedir', {get:()=>basedir});
 	ODef(inst,'booknames', {get:()=>db.booknames});
 	ODef(inst,'extra', {get:()=>db.extra});
+	ODef(inst,'backlinks', {get:()=>_backlinks});
+	ODef(inst,'withtoc', {get:()=>db.withtoc});
+	ODef(inst,'toc', {get:()=>_toc});
+	ODef(inst,'builddate', {get:()=>db.date});
 	ODef(inst,'payload', {get:()=>db.payload, set:py=>db.payload=py});
 	ODef(inst,'bookstarts',{get:()=>db.bookstarts});
 	ODef(inst,'totalline', {get:()=>db.txtstarts[db.txtstarts.length-1]});

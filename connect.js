@@ -3,16 +3,16 @@ const makelinklist=bklinks=>{
 	for (bk in bklinks) {
 		const arr=bklinks[bk];
 		for (var i=0;i<arr.length;i++) {
-			const m=arr[i].match(/(.+?)\|p(\d+)/)
-			out.push( [bk+"_p"+m[2] , m[1] ]);
+			const m=arr[i].match(/(.+?)\|(\d+)/)
+			out.push( [bk+"_"+m[2] , m[1] ]);
 		}
 	}
 	return out;
 }
 const buildbacklink=(dbname,dbpool)=>{
 	const sourcedb=dbpool[dbname];
-	if (!sourcedb.getaux || !sourcedb.getaux())return;
-	const matlinks=sourcedb.getaux().matlinks;
+	if (!sourcedb.extra)return;
+	const matlinks=sourcedb.extra.matlinks;
 	if (!matlinks)return;
 
 	for (targetdb in matlinks) {

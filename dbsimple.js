@@ -88,7 +88,6 @@ const addbook=function(bk){
 	B.bookstarts.push(B.linecount);
 	const str=packsmallint(B.pageline);
 	B.pagelines.push(str);
-
 	B.pageline=[];
 	B.bk=bk;
 }
@@ -96,10 +95,13 @@ const done=function(payload,extra){
 	const B=this;
 	let dbobj={ name:B.opts.name,date:(new Date).toISOString()
 		,ver:2};
+	
+	if (B.opts.withtoc) dbobj.withtoc=true;
 	dbobj.txtstarts=writesegments(B.opts.name,"","txt",B.opts.outdir,B.txt);
 	dbobj.booknames=B.booknames;
 	dbobj.bookstarts=B.bookstarts;
 	dbobj.pagelines=B.pagelines;
+
 
 	if (Object.keys(extra||{}).length) dbobj.extra=extra;
 

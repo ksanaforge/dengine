@@ -27,13 +27,13 @@ const CAPx0=(cap,db)=>{
 	let bookstart=db.bookstarts[cap.bkseq];
 	let x=cap.x;
 	let p=cap._;
-	/*
+
 	if (p==-1) {
-		let bk0=cap.bk0; //resolved by n:n format
+		let bk0=cap.bk0; 
 		if (bk0==-1) bk0=0;
 		return bookstart+bk0+x;
 	}
-	*/
+
 	const parr=db.getpageline(cap.bkseq);
 
 	if (p>parr.length)	p=parr.length;
@@ -55,7 +55,7 @@ const recal=(cap,db)=>{
 	cap=Object.assign(cap,pp);
 }
 const bindMethods=(cap,db)=>{
-	cap.bkx=(cap.bkseq+1)+":"+(cap.bk0+1);
+	cap.bkx=(cap.bkseq+1)+"_x"+(cap.bk0);
 	cap.prevp=prevp.bind(cap);
 	cap.nextp=nextp.bind(cap);
 	cap.floor=floor.bind(cap);
@@ -92,7 +92,7 @@ const parseCAP=(str,db)=>{
 		str.substr(at).replace(/([a-z_]\d+)/g,(m,m1)=>arr.push(m1));
 
 		let bk=str.substr(0,at);
-		let bkseq=0;
+		let bkseq=-1;
 		if (parseInt(bk).toString()===bk) {
 			bkseq=parseInt(bk)-1;
 			if (bkseq<0) bkseq=0;

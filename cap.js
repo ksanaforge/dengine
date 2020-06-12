@@ -1,6 +1,6 @@
 const createCAPobj=(obj,newvalues)=>{
 	const def={bk:'', //book name 
-		bkseq:0,
+		bkseq:-1,
 		_:-1 ,  //paranum group, most book has only one.
 		p:-1 ,  //paranum -1=not resolved
 		g:0  , //page unit grouping

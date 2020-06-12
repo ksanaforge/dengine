@@ -59,10 +59,12 @@ const open=(name,cb)=>{
 	clearInterval(opendbTimer);
 	opentrycount=0;
 	opendbTimer=setInterval( ()=>{
-		if (dbpool[name]) {
+		const db=dbpool[name];
+		if (db) {
 			clearInterval(opendbTimer);
+			if (db.withtoc && !db.toc) loadscript(db.basedir+".toc.js");
 			buildbacklink(name,dbpool);
-			cb&&cb(dbpool[name]);
+			cb&&cb(db);
 		}
 		if (opentrycount>10) clearInterval(opendbTimer);
 		opentrycount++;
@@ -99,6 +101,7 @@ const openSync=(name,opts)=>{
 	if (!db)return null;
 
 	if (db.ver==2) {
+		if (db.withtoc && !db.toc) loadscript(db.basedir+".toc.js");
 		return db;
 	}
 	buildbacklink(name,dbpool);

@@ -10,18 +10,24 @@ const tocNodeParser=lnk=>{
 const MAXLINE=256,MAXPAGE=32768;
 const {SEGSEP,LEVELSEP}=require("./segment")
 const vplval=id=>{
-	const p=id.split(SEGSEP);
-	const vol=parseInt(p[0]);
-	const page=parseInt(p[1]);
-	let line=0;
-	if (!p[1])return 0;
-	let at=p[1].indexOf(LEVELSEP)
-	if (at>-1) {
-		line=parseInt(p[1].substr(at+1));
+	const m1=id.match(/(\d+):(\d+)\.(\d+)/);
+	const m2=id.match(/(\d+):(\d+)\.(\d+)/);
+	const m3=id.match(/(\d+)_x(\d+)/);
+
+	if (m3) {
+		return parseInt(m3[1])*MAXPAGE+parseInt(m3[2]);
+	} else if (m1||m2) {
+		const p=id.split(SEGSEP);
+		const vol=parseInt(p[0]);
+		const page=parseInt(p[1]);
+		let line=0;
+		if (!p[1])return 0;
+		let at=p[1].indexOf(LEVELSEP)
+		if (at>-1) {
+			line=parseInt(p[1].substr(at+1));
+		}
+		return line+page*MAXLINE+vol*MAXPAGE*MAXLINE;
 	}
-
-	return line+page*MAXLINE+vol*MAXPAGE*MAXLINE;
-
 }
 const setupToc = (rawtoc)=> {
 	const toc=[];
