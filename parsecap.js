@@ -1,42 +1,39 @@
 const {createCAPobj,stringify,getline,floor}=require("./cap");
-/*
-const fromx0=x0=>{
-	seg=db.pagefromx0(str);
-	return seg
-}
-*/
-const pofx=(cap,db)=>{
+
+const pageofx=(cap,db)=>{
 	const arr=db.getpageline(cap.bkseq);
 	let prev=0,l=0;
 	for (var i=0;i<arr.length;i++) {
 		if (arr[i]>cap.bk0) {
-			if (i==0) return {p:0,x:cap.bk0,px:arr[1]-arr[0]};
-			return {p:i, x:cap.bk0-arr[i-1], px:arr[i]-arr[i-1] };
+			if (i==0) return {_:0,x:cap.bk0,_w:arr[1]-arr[0]};
+			return {_:i, x:cap.bk0-arr[i-1], _w:arr[i]-arr[i-1] };
 		}
 	}
-	let px=1;
+	let _w=1;
 	const nextarr=db.getpageline(cap.bkseq+1)
 	if (nextarr) {
 		const nextbookstart=db.bookstarts[cap.bkseq];
-		px=nextbookstart-arr[arr.length-1];
+		_w=nextbookstart-arr[arr.length-1];
 	} else {
 		const thisbookstart=db.bookstarts[cap.bkseq];
-		px=db.totalline-thisbookstart-arr[arr.length-1];
+		_w=db.totalline-thisbookstart-arr[arr.length-1];
 	}
-	const p=arr.length-1;
+	const _=arr.length-1;
 	const x=cap.bk0-arr[arr.length-1];
-	return {p,x,px};
+	return {_,x,_w};
 }
 
 const CAPx0=(cap,db)=>{
 	let bookstart=db.bookstarts[cap.bkseq];
 	let x=cap.x;
-	let p=cap.p;
+	let p=cap._;
+	/*
 	if (p==-1) {
 		let bk0=cap.bk0; //resolved by n:n format
 		if (bk0==-1) bk0=0;
 		return bookstart+bk0+x;
 	}
+	*/
 	const parr=db.getpageline(cap.bkseq);
 
 	if (p>parr.length)	p=parr.length;
@@ -54,7 +51,7 @@ const CAPx0=(cap,db)=>{
 const recal=(cap,db)=>{
 	cap.x0=CAPx0(cap,db);
 	cap.bk0=cap.x0-db.bookstarts[cap.bkseq];
-	const pp=pofx(cap,db);
+	const pp=pageofx(cap,db);
 	cap=Object.assign(cap,pp);
 }
 const bindMethods=(cap,db)=>{
@@ -68,13 +65,13 @@ const bindMethods=(cap,db)=>{
 	Object.defineProperty(cap,"db",{get:()=>db});
 }
 const nextp=function(){
-	const np=createCAPobj(this,{p:this.p+1});
+	const np=createCAPobj(this,{_:this._+1});
 	recal(np,this.db);
 	bindMethods(np,this.db);
 	return np;
 }
 const prevp=function(){
-	const pv=createCAPobj(this ,{p:this.p-1});
+	const pv=createCAPobj(this ,{_:this._-1});
 	recal(pv,this.db);
 	bindMethods(pv,this.db);
 	pv.floor();

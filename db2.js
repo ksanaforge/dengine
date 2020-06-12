@@ -63,7 +63,7 @@ const Db2=function(_d){
 		for (var i=0;i<pageline.length;i++){
 			if (x0<bk0+pageline[i]) {
 				if (i==0) i=1;
-				return {bkseq,bk0,p:i-1,x: x0-bk0-(pageline[i-2]?pageline[i-2]:0)}
+				return {bkseq,bk0,_:i-1,x: x0-bk0-(pageline[i-2]?pageline[i-2]:0)}
 			};
 		}
 		return {bkseq,bk0,p:pageline.length-1,
